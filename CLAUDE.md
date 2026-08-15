@@ -34,8 +34,10 @@ These are the design-system rules with teeth in code review. Full rationale in `
 
 - **No inline `style` attributes in server-rendered markup.** Our CSP runs `style-src` without
   `unsafe-inline`, so a `style="..."` attribute in SSR HTML is blocked and the element renders
-  unstyled. Set dynamic values at runtime through CSS custom properties
-  (`el.style.setProperty('--sheet-y', …)`), which goes via CSSOM and is not CSP-restricted.
+  unstyled — a closed sheet would sit on top of the page until hydration. Resting state goes in a
+  stylesheet; dynamic values are written at runtime through CSSOM (`el.style.transform = …` or
+  `el.style.setProperty('--sheet-y', …)`), which is a property write, not attribute parsing, and is
+  not CSP-restricted. `npm test` asserts no primitive server-renders a `style` attribute.
 - **No CDN anything** — no third-party fonts, no script tags, no stylesheets. Everything
   first-party, pinned, in the lockfile. Paddle's checkout domain is the only permitted third-party
   script origin, and nothing else may load on a checkout page. (Security spec §5, §11.)

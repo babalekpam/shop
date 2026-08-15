@@ -71,9 +71,13 @@ gets wrong:
 
 - Every animatable surface has its closed/resting state defined by a class in
   `src/styles/`, delivered as a nonce'd first-party stylesheet.
-- Runtime values are written as CSS custom properties via `el.style.setProperty('--sheet-y', …)`,
-  and the stylesheet consumes them: `transform: translateY(var(--sheet-y, 100%))`.
+- Runtime values are written through CSSOM — either `el.style.transform = …` directly, or
+  `el.style.setProperty('--sheet-y', …)` with the stylesheet consuming it. Both are property
+  writes, not attribute parsing, so neither is CSP-restricted. `Sheet` uses the direct form,
+  because that is what Motion writes to and splitting the two would desynchronise them.
 - **No component may pass a `style` prop that must be correct before hydration.** Review rejects it.
+  The suite asserts this mechanically: every primitive is server-rendered and checked for a `style`
+  attribute.
 - Motion/Framer Motion's `initial` prop server-renders an inline style attribute. Use
   `initial={false}` and let the CSS class hold the resting state, or the surface flashes.
 
