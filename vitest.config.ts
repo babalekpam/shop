@@ -5,9 +5,8 @@ import { defineConfig } from 'vitest/config';
  * optimised transform at build time. Vitest does not run that transform, so the component
  * tests would reach the bundler as raw JSX and fail to parse.
  *
- * `tests/tsconfig.json` sets `jsx: react-jsx` for the test files only. That keeps one
- * source of truth for the app build and one for the tests, without fighting Next over a
- * file it rewrites on every build.
+ * Setting the transform here keeps one source of truth for the app build and one for the
+ * tests, without fighting Next over a file it rewrites on every build.
  */
 export default defineConfig({
   // Vitest 4 transforms with oxc, so this is the knob that applies (an `esbuild`
