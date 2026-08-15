@@ -1,0 +1,18 @@
+{
+  "brand": {
+    "tagline": "Abokin fasaharku"
+  },
+  "nav": {
+    "security": "Tsaro da Injiniyanci",
+    "software": "Manhaja",
+    "downloads": "Zazzagewa",
+    "account": "Asusunku",
+    "cart": "Kwando",
+    "language": "Harshe"
+  },
+  "common": {
+    "loading": "Ana lodawa",
+    "close": "Rufe",
+    "back": "Koma"
+  }
+}

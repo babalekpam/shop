@@ -1,0 +1,18 @@
+{
+  "brand": {
+    "tagline": "Sa partenaire teknoloji"
+  },
+  "nav": {
+    "security": "Kaaraange ak Enjeneri",
+    "software": "Lojisiel",
+    "downloads": "Telesarjema",
+    "account": "Sa kont",
+    "cart": "Panyee",
+    "language": "Làkk"
+  },
+  "common": {
+    "loading": "Mungi yeb",
+    "close": "Tëj",
+    "back": "Dellu"
+  }
+}

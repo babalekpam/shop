@@ -22,12 +22,12 @@ const CANCEL_SLOP = 10;
 export type ButtonVariant = 'primary' | 'secondary' | 'plain' | 'destructive';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
+  variant?: ButtonVariant | undefined;
   /**
    * Fire a short haptic on commit. Reserve it for meaningful moments — a payment
    * confirming, an item snapping home. Over-feedback trains people to ignore all of it.
    */
-  haptic?: boolean;
+  haptic?: boolean | undefined;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

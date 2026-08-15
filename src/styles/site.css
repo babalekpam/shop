@@ -1,0 +1,535 @@
+/*
+ * Site layout.
+ *
+ * Logical properties throughout — `inline-start`, never `left`. Spacing in rem so the
+ * layout scales with the user's text size and survives locales whose strings run 40%
+ * longer than English (French and Portuguese both do, routinely).
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-block-size: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Never trap the user: the skip link is the first focusable thing on every page. */
+.skip-link {
+  position: absolute;
+  inset-block-start: -100%;
+  inset-inline-start: var(--space-md);
+  z-index: 100;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-radius: var(--radius-sm);
+}
+
+.skip-link:focus {
+  inset-block-start: var(--space-md);
+}
+
+/* ---- Header --------------------------------------------------------------- */
+
+.site-header {
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.site-logo {
+  flex: none;
+  min-inline-size: 0;
+}
+
+.site-nav {
+  display: flex;
+  gap: var(--space-lg);
+  flex: 1;
+  justify-content: center;
+}
+
+.site-nav-link {
+  color: var(--fg-secondary);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  transition: color var(--duration-press) var(--ease-out);
+}
+
+.site-nav-link:hover {
+  color: var(--fg);
+}
+
+.site-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: none;
+}
+
+.locale-select {
+  background: transparent;
+  color: var(--fg-secondary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-full);
+  padding: var(--space-2xs) var(--space-xs);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.cart-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cart-button:active {
+  transform: scale(var(--press-scale));
+}
+
+.cart-badge {
+  position: absolute;
+  inset-block-start: 0.1rem;
+  /* Logical, so the badge sits on the correct corner in Arabic. */
+  inset-inline-end: 0.1rem;
+  min-inline-size: 1.1rem;
+  padding-inline: 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Layout --------------------------------------------------------------- */
+
+.site-main {
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: 72rem;
+  margin-inline: auto;
+  padding-inline: var(--space-lg);
+  padding-block-end: var(--space-3xl);
+}
+
+.section {
+  padding-block: var(--space-2xl);
+}
+
+.section-heading {
+  margin-block: 0 var(--space-lg);
+}
+
+.page-head {
+  padding-block-end: var(--space-lg);
+}
+
+.page-head h1 {
+  margin-block: 0 var(--space-sm);
+}
+
+.page-lede {
+  margin: 0;
+  max-inline-size: 46rem;
+  color: var(--fg-secondary);
+}
+
+.page-note {
+  margin-block-start: var(--space-md);
+  max-inline-size: 46rem;
+}
+
+/* ---- Hero ----------------------------------------------------------------- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-lg);
+  padding-block: var(--space-3xl) var(--space-2xl);
+}
+
+.hero-title {
+  margin: 0;
+  max-inline-size: 20ch;
+}
+
+.hero-lede {
+  margin: 0;
+  max-inline-size: 52ch;
+  color: var(--fg-secondary);
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.credentials {
+  max-inline-size: 60ch;
+  margin: 0;
+  padding: var(--space-lg);
+  border-inline-start: 2px solid var(--accent);
+  color: var(--fg-secondary);
+  background: var(--bg-sunken);
+  border-radius: var(--radius-md);
+}
+
+/* ---- Cards ---------------------------------------------------------------- */
+
+.tier-grid,
+.sku-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+}
+
+.tier-card,
+.sku-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  /* Only transform and opacity — nothing here costs layout or paint. */
+  transition:
+    transform var(--response-snappy) var(--ease-out),
+    opacity var(--response-snappy) var(--ease-out);
+}
+
+.tier-card:hover,
+.sku-card:hover {
+  transform: translateY(-2px);
+}
+
+.tier-card h2,
+.sku-card h3 {
+  margin: 0;
+}
+
+.tier-card p,
+.sku-card-summary {
+  margin: 0;
+  color: var(--fg-secondary);
+}
+
+.sku-card {
+  justify-content: space-between;
+}
+
+.sku-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.sku-card-delivery {
+  margin: 0;
+}
+
+.sku-card-foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-block-start: var(--space-md);
+}
+
+.sku-card-actions {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ---- Cart drawer ---------------------------------------------------------- */
+
+.cart-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: 0 var(--space-lg) var(--space-lg);
+  block-size: 100%;
+  overflow-y: auto;
+}
+
+.cart-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.cart-drawer-head h2 {
+  margin: 0;
+}
+
+.cart-empty {
+  padding-block: var(--space-2xl);
+  color: var(--fg-secondary);
+}
+
+.cart-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cart-line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-block-end: var(--space-md);
+  border-block-end: 1px solid var(--separator);
+}
+
+.cart-line-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.cart-line-main p {
+  margin: 0;
+}
+
+.cart-undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+}
+
+.cart-drawer-foot {
+  margin-block-start: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-block-start: var(--space-md);
+}
+
+.cart-subtotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.cart-checkout {
+  justify-content: center;
+}
+
+/* ---- Checkout ------------------------------------------------------------- */
+
+.checkout {
+  display: grid;
+  gap: var(--space-xl);
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  align-items: start;
+}
+
+.checkout-summary,
+.checkout-gateway {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+}
+
+.checkout-summary h2,
+.checkout-gateway h2 {
+  margin: 0;
+}
+
+.checkout-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.checkout-line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.checkout-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-block-start: var(--space-md);
+  border-block-start: 1px solid var(--separator);
+}
+
+.gateway-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.gateway-option {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+  padding: var(--space-md);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.gateway-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-quiet);
+}
+
+.gateway-option > span {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.gateway-name {
+  font-weight: var(--weight-semibold);
+}
+
+.checkout-pay {
+  justify-content: center;
+}
+
+.checkout-security,
+.checkout-problem {
+  margin: 0;
+}
+
+.checkout-problem {
+  color: var(--danger);
+}
+
+.checkout-empty,
+.checkout-status {
+  padding-block: var(--space-2xl);
+}
+
+/* ---- Footer --------------------------------------------------------------- */
+
+.site-footer {
+  border-block-start: 1px solid var(--separator);
+  padding: var(--space-2xl) var(--space-lg);
+  background: var(--bg-sunken);
+}
+
+.site-footer-inner {
+  inline-size: 100%;
+  max-inline-size: 72rem;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-xl);
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+}
+
+.site-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.site-footer-brand p {
+  margin: 0;
+}
+
+.site-footer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.site-footer-heading {
+  margin: 0 0 var(--space-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-tertiary);
+}
+
+.site-footer-nav a {
+  color: var(--fg-secondary);
+}
+
+.site-footer-nav a:hover {
+  color: var(--fg);
+}
+
+.site-footer-rights {
+  max-inline-size: 72rem;
+  margin: var(--space-xl) auto 0;
+  color: var(--fg-tertiary);
+}
+
+/* ---- Narrow viewports ----------------------------------------------------- */
+
+@media (max-width: 48rem) {
+  .site-nav {
+    display: none;
+  }
+
+  .site-main {
+    padding-inline: var(--space-md);
+  }
+
+  .hero {
+    padding-block: var(--space-2xl) var(--space-lg);
+  }
+}

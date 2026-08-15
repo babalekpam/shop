@@ -1,0 +1,107 @@
+{
+  "brand": {
+    "tagline": "Your technology partner"
+  },
+  "nav": {
+    "security": "Security & Engineering",
+    "software": "Software",
+    "downloads": "Downloads",
+    "account": "Your account",
+    "cart": "Cart",
+    "cartWithCount": "Cart, {count, plural, =0 {empty} one {# item} other {# items}}",
+    "skipToContent": "Skip to content",
+    "language": "Language",
+    "openMenu": "Menu"
+  },
+  "home": {
+    "title": "Security, software and engineering — priced, not quoted.",
+    "lede": "Every product and service has a price and a buy button. No quote forms, no discovery calls before you know what it costs.",
+    "ctaPrimary": "Browse security work",
+    "ctaSecondary": "See the software",
+    "featured": "Start here",
+    "credentials": "Penetration testing and compliance work is performed by an M.S. in Cybersecurity holding Security+, on a platform we run in production ourselves."
+  },
+  "tiers": {
+    "security": {
+      "name": "Security & Engineering",
+      "blurb": "Penetration testing, continuous vulnerability management, SOC monitoring and compliance automation — plus productized engineering, delivered to a fixed price and a fixed date."
+    },
+    "software": {
+      "name": "Software",
+      "blurb": "Subscriptions to the ARGILETTE product portfolio: clinics, CRM, farming, addressing and vaults."
+    },
+    "downloads": {
+      "name": "Downloads",
+      "blurb": "Starters, kits and specifications. Instant delivery, no subscription."
+    }
+  },
+  "catalog": {
+    "from": "From",
+    "delivery": "Delivery",
+    "addToCart": "Add to cart",
+    "added": "Added",
+    "learnMore": "Product site",
+    "oneTime": "one-time",
+    "empty": "Nothing here yet.",
+    "interval": {
+      "month": "month",
+      "year": "year"
+    },
+    "notInstant": "This is delivered work, not an instant download. The delivery time above is what we commit to."
+  },
+  "cart": {
+    "title": "Cart",
+    "empty": "Your cart is empty.",
+    "emptyHint": "Everything in the catalog has a price and a buy button.",
+    "subtotal": "Subtotal",
+    "checkout": "Checkout",
+    "remove": "Remove",
+    "removed": "{name} removed",
+    "undo": "Undo",
+    "close": "Close cart",
+    "taxNote": "Tax is calculated at checkout by the payment provider for your country."
+  },
+  "price": {
+    "locked": "Price held for this session",
+    "lockedExplainer": "Exchange rates moved after you added this. You pay the price you were shown."
+  },
+  "checkout": {
+    "title": "Checkout",
+    "summary": "Order summary",
+    "payWith": "Payment method",
+    "paddle": "Card, PayPal and bank transfer",
+    "paddleDetail": "Handled by Paddle, our merchant of record. Prices include tax where required.",
+    "cinetpay": "Mobile money",
+    "cinetpayDetail": "Orange Money, MTN, Moov and Wave. You confirm on your phone.",
+    "regionNote": "We suggested this based on where you are connecting from. You can change it.",
+    "pay": "Pay {amount}",
+    "securityNote": "Card details are entered on the payment provider's own page and never reach ARGILETTE.",
+    "servicesIntake": "After payment we will email you an intake form so we can schedule the work."
+  },
+  "payment": {
+    "submitting": "Sending your request",
+    "awaitingTitle": "Check your phone",
+    "awaitingDetail": "Approve the payment prompt on your mobile money account. This usually takes a minute or two.",
+    "verifying": "Confirming with your provider",
+    "confirmed": "Payment confirmed",
+    "failed": "That payment did not go through",
+    "safeToLeave": "You can close this page. The purchase completes on its own and we will email you the moment it does.",
+    "elapsed": "Waiting {duration}",
+    "retry": "Try again"
+  },
+  "footer": {
+    "products": "Products",
+    "company": "Company",
+    "legal": "Legal",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "refunds": "Refunds",
+    "rights": "© {year} ARGILETTE LLC. All rights reserved.",
+    "builtWith": "Built and operated by ARGILETTE."
+  },
+  "common": {
+    "loading": "Loading",
+    "close": "Close",
+    "back": "Back"
+  }
+}

@@ -9,6 +9,7 @@
  * supply-chain requirement (security spec §5, §11), not a performance preference.
  */
 
+@import './brand.css';
 @import './tokens.css';
 @import './typography.css';
 @import './components.css';

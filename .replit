@@ -1,0 +1,22 @@
+run = "npm start"
+entrypoint = "src/app/[locale]/page.tsx"
+modules = ["nodejs-22"]
+
+hidden = [".next", "node_modules", ".config"]
+
+[nix]
+channel = "stable-24_05"
+
+[env]
+NEXT_TELEMETRY_DISABLED = "1"
+
+[deployment]
+# Build once, then serve. Next needs a Node runtime here — locale routing, geo currency
+# and the per-request CSP nonce all run per request, so this cannot be a static export.
+build = ["sh", "-c", "npm ci && npm run build"]
+run = ["sh", "-c", "npm start"]
+deploymentTarget = "autoscale"
+
+[[ports]]
+localPort = 3000
+externalPort = 80

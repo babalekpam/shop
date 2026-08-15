@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <title>ARGILETTE</title>
+  <defs>
+    <linearGradient id="m" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5c9bd6"/>
+      <stop offset="100%" stop-color="#3b6d9c"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#m)">
+    <polygon points="50,2 63.42,30 36.58,30"/>
+    <polygon points="34.67,34 65.33,34 76.83,58 23.17,58"/>
+    <polygon points="21.25,62 78.75,62 85.46,76 14.54,76"/>
+    <polygon points="12.63,80 44,80 34,98 4,98"/>
+    <polygon points="56,80 87.37,80 96,98 66,98"/>
+  </g>
+</svg>

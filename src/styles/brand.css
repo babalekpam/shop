@@ -1,0 +1,152 @@
+/*
+ * ARGILETTE brand layer — colours and the logo lockup.
+ *
+ * Colours are sampled from the supplied artwork. The mark's gradient runs light→dark
+ * downward on dark surfaces and dark→light on light ones, exactly as in the source files,
+ * so a surface never has to know which variant it is showing.
+ */
+
+:root {
+  /* Core palette */
+  --brand-navy: #131c26;
+  --brand-navy-raised: #1b2733;
+
+  --brand-blue-300: #7db0e0;
+  --brand-blue-400: #5c9bd6;
+  --brand-blue-600: #3b6d9c;
+  --brand-blue-700: #2d5b8a;
+  --brand-blue-800: #1f4e79;
+
+  /* Secondary. Present in the brand system as an alternate lockup; not the default UI
+   * accent. Use for editorial accenting, never as a second call-to-action colour. */
+  --brand-terracotta-500: #c0563c;
+  --brand-terracotta-400: #d09080;
+
+  --brand-cream: #faf5ef;
+  --brand-ink: #1c2b3a;
+
+  /* Light surfaces: the mark runs dark at the apex to light at the legs. */
+  --brand-mark-from: var(--brand-blue-800);
+  --brand-mark-to: #7d9dc4;
+  --brand-wordmark: var(--brand-ink);
+  --brand-tagline: #6b7c8d;
+  --brand-rule: var(--brand-blue-700);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    /* Dark surfaces invert the gradient: light apex, deeper legs. */
+    --brand-mark-from: var(--brand-blue-400);
+    --brand-mark-to: var(--brand-blue-600);
+    --brand-wordmark: #ffffff;
+    --brand-tagline: #93a3b4;
+    --brand-rule: #4a7fb5;
+  }
+}
+
+:root[data-theme='dark'] {
+  --brand-mark-from: var(--brand-blue-400);
+  --brand-mark-to: var(--brand-blue-600);
+  --brand-wordmark: #ffffff;
+  --brand-tagline: #93a3b4;
+  --brand-rule: #4a7fb5;
+}
+
+/* ---- Lockup --------------------------------------------------------------- */
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75em;
+  color: var(--brand-wordmark);
+  /* em-based throughout, so the whole lockup scales from one font-size and honours the
+   * user's text-size setting. */
+  font-size: var(--brand-logo-size, 1.25rem);
+  line-height: 1;
+}
+
+.brand-logo-sm {
+  --brand-logo-size: 1rem;
+}
+.brand-logo-md {
+  --brand-logo-size: 1.25rem;
+}
+.brand-logo-lg {
+  --brand-logo-size: 2rem;
+}
+
+.brand-logo-stacked {
+  flex-direction: column;
+  gap: 1.2em;
+  text-align: center;
+}
+
+.brand-logo-mark {
+  flex: none;
+  /* The mark is optically heavier than cap height, so it sits slightly larger than the
+   * wordmark rather than matching it exactly. */
+  inline-size: 2.4em;
+  block-size: 2.4em;
+}
+
+.brand-logo-stacked .brand-logo-mark {
+  inline-size: 4.5em;
+  block-size: 4.5em;
+}
+
+.brand-logo-type {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  min-inline-size: 0;
+}
+
+.brand-wordmark {
+  font-family: var(--font-brand, var(--font-sans));
+  font-size: 1.6em;
+  font-weight: 300;
+  /* Wide, even tracking is the defining characteristic of the wordmark. Positive here
+   * despite the size, because it is a lockup rather than running display type — the one
+   * deliberate exception to the size-specific tracking rule in the type scale. */
+  letter-spacing: 0.28em;
+  /* Tracking adds space after the final letter, which visually shifts the word off
+   * centre. Pull it back so the lockup stays optically aligned. */
+  margin-inline-end: -0.28em;
+  white-space: nowrap;
+  color: var(--brand-wordmark);
+}
+
+.brand-rule {
+  display: block;
+  block-size: 1px;
+  background: var(--brand-rule);
+  /* Aligns to the wordmark's width rather than a fixed measure. */
+  inline-size: 100%;
+  min-inline-size: 8em;
+}
+
+.brand-tagline {
+  font-family: var(--font-brand, var(--font-sans));
+  font-size: 0.62em;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  margin-inline-end: -0.32em;
+  color: var(--brand-tagline);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* Arabic does not take letterspacing — it breaks the cursive joins. The wordmark stays
+ * Latin (it is a proper noun and a trademark), but the tagline is translated, so it must
+ * lose the tracking when it is set in Arabic. */
+:lang(ar) .brand-tagline {
+  letter-spacing: 0 !important;
+  margin-inline-end: 0;
+  font-size: 0.7em;
+}
+
+@media (prefers-contrast: more) {
+  .brand-tagline {
+    color: var(--fg);
+  }
+}

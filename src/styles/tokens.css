@@ -38,13 +38,13 @@
   --bg-elevated: #ffffff;
   --bg-sunken: #f2f2f5;
 
-  --fg: #1c1c1e;
-  --fg-secondary: #48484a;
+  --fg: var(--brand-ink);
+  --fg-secondary: #48586a;
   --fg-tertiary: #8e8e93;
 
-  --accent: #0a5cff;
+  --accent: var(--brand-blue-700);
   --accent-fg: #ffffff;
-  --accent-quiet: rgba(10, 92, 255, 0.1);
+  --accent-quiet: rgba(45, 91, 138, 0.1);
 
   --success: #1a7f37;
   --warning: #9a6700;
@@ -101,17 +101,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #000000;
-    --bg-elevated: #1c1c1e;
-    --bg-sunken: #0a0a0b;
+    --bg: var(--brand-navy);
+    --bg-elevated: var(--brand-navy-raised);
+    --bg-sunken: #0d141c;
 
     --fg: #f5f5f7;
     --fg-secondary: #aeaeb2;
     --fg-tertiary: #8e8e93;
 
-    --accent: #4d8dff;
-    --accent-fg: #05122e;
-    --accent-quiet: rgba(77, 141, 255, 0.16);
+    --accent: var(--brand-blue-400);
+    --accent-fg: #0b1720;
+    --accent-quiet: rgba(92, 155, 214, 0.16);
 
     --success: #3fb950;
     --warning: #d29922;
@@ -120,9 +120,9 @@
     --separator: rgba(235, 235, 245, 0.14);
     --border-strong: rgba(235, 235, 245, 0.3);
 
-    --material-thin-bg: rgba(28, 28, 30, 0.6);
-    --material-regular-bg: rgba(28, 28, 30, 0.72);
-    --material-thick-bg: rgba(20, 20, 22, 0.82);
+    --material-thin-bg: rgba(27, 39, 51, 0.6);
+    --material-regular-bg: rgba(27, 39, 51, 0.72);
+    --material-thick-bg: rgba(19, 28, 38, 0.84);
     --material-edge: rgba(255, 255, 255, 0.12);
 
     --scrim: rgba(0, 0, 0, 0.5);
@@ -130,17 +130,17 @@
 }
 
 :root[data-theme='dark'] {
-  --bg: #000000;
-  --bg-elevated: #1c1c1e;
-  --bg-sunken: #0a0a0b;
+  --bg: var(--brand-navy);
+  --bg-elevated: var(--brand-navy-raised);
+  --bg-sunken: #0d141c;
 
   --fg: #f5f5f7;
   --fg-secondary: #aeaeb2;
   --fg-tertiary: #8e8e93;
 
-  --accent: #4d8dff;
-  --accent-fg: #05122e;
-  --accent-quiet: rgba(77, 141, 255, 0.16);
+  --accent: var(--brand-blue-400);
+  --accent-fg: #0b1720;
+  --accent-quiet: rgba(92, 155, 214, 0.16);
 
   --success: #3fb950;
   --warning: #d29922;
@@ -149,9 +149,9 @@
   --separator: rgba(235, 235, 245, 0.14);
   --border-strong: rgba(235, 235, 245, 0.3);
 
-  --material-thin-bg: rgba(28, 28, 30, 0.6);
-  --material-regular-bg: rgba(28, 28, 30, 0.72);
-  --material-thick-bg: rgba(20, 20, 22, 0.82);
+  --material-thin-bg: rgba(27, 39, 51, 0.6);
+  --material-regular-bg: rgba(27, 39, 51, 0.72);
+  --material-thick-bg: rgba(19, 28, 38, 0.84);
   --material-edge: rgba(255, 255, 255, 0.12);
 
   --scrim: rgba(0, 0, 0, 0.5);

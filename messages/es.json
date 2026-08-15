@@ -1,0 +1,70 @@
+{
+  "brand": {
+    "tagline": "Tu socio tecnológico"
+  },
+  "nav": {
+    "security": "Seguridad e Ingeniería",
+    "software": "Software",
+    "downloads": "Descargas",
+    "account": "Tu cuenta",
+    "cart": "Carrito",
+    "cartWithCount": "Carrito, {count, plural, =0 {vacío} one {# artículo} other {# artículos}}",
+    "skipToContent": "Ir al contenido",
+    "language": "Idioma",
+    "openMenu": "Menú"
+  },
+  "home": {
+    "title": "Seguridad, software e ingeniería — con precio, sin presupuestos.",
+    "lede": "Cada producto y servicio tiene precio y botón de compra. Sin formularios de presupuesto, sin llamadas antes de saber cuánto cuesta.",
+    "ctaPrimary": "Ver trabajos de seguridad",
+    "ctaSecondary": "Ver el software",
+    "featured": "Empieza aquí"
+  },
+  "catalog": {
+    "from": "Desde",
+    "delivery": "Plazo",
+    "addToCart": "Añadir al carrito",
+    "added": "Añadido",
+    "learnMore": "Sitio del producto",
+    "oneTime": "pago único",
+    "interval": {
+      "month": "mes",
+      "year": "año"
+    }
+  },
+  "cart": {
+    "title": "Carrito",
+    "empty": "Tu carrito está vacío.",
+    "subtotal": "Subtotal",
+    "checkout": "Finalizar compra",
+    "remove": "Quitar",
+    "undo": "Deshacer",
+    "close": "Cerrar carrito"
+  },
+  "price": {
+    "locked": "Precio garantizado en esta sesión"
+  },
+  "checkout": {
+    "title": "Pago",
+    "summary": "Resumen del pedido",
+    "payWith": "Método de pago",
+    "pay": "Pagar {amount}",
+    "securityNote": "Los datos de la tarjeta se introducen en la página del proveedor y nunca pasan por ARGILETTE."
+  },
+  "payment": {
+    "submitting": "Enviando tu solicitud",
+    "awaitingTitle": "Revisa tu teléfono",
+    "awaitingDetail": "Aprueba la solicitud de pago en tu cuenta de dinero móvil. Suele tardar uno o dos minutos.",
+    "verifying": "Confirmando con tu proveedor",
+    "confirmed": "Pago confirmado",
+    "failed": "El pago no se completó",
+    "safeToLeave": "Puedes cerrar esta página. La compra se completa sola y te avisaremos por correo en cuanto ocurra.",
+    "elapsed": "Esperando {duration}",
+    "retry": "Reintentar"
+  },
+  "common": {
+    "loading": "Cargando",
+    "close": "Cerrar",
+    "back": "Volver"
+  }
+}

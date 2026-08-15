@@ -52,15 +52,15 @@ export interface SheetProps {
    * path — a surface that arrives from one edge and leaves by another reads as
    * disconnected.
    */
-  edge?: LogicalEdge;
+  edge?: LogicalEdge | undefined;
   /**
    * Modal surfaces dim the background to focus attention; parallel ones do not, so the
    * flow behind them is not broken. Checkout is modal. The cart drawer is not — the
    * catalog stays visible and browsable behind it. (Skill §12.)
    */
-  modal?: boolean;
-  'aria-label'?: string;
-  'aria-labelledby'?: string;
+  modal?: boolean | undefined;
+  'aria-label'?: string | undefined;
+  'aria-labelledby'?: string | undefined;
   children: React.ReactNode;
 }
 

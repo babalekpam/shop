@@ -1,0 +1,70 @@
+{
+  "brand": {
+    "tagline": "O seu parceiro tecnológico"
+  },
+  "nav": {
+    "security": "Segurança e Engenharia",
+    "software": "Software",
+    "downloads": "Transferências",
+    "account": "A sua conta",
+    "cart": "Carrinho",
+    "cartWithCount": "Carrinho, {count, plural, =0 {vazio} one {# artigo} other {# artigos}}",
+    "skipToContent": "Ir para o conteúdo",
+    "language": "Idioma",
+    "openMenu": "Menu"
+  },
+  "home": {
+    "title": "Segurança, software e engenharia — com preço, sem orçamento.",
+    "lede": "Cada produto e serviço tem preço e botão de compra. Sem formulários de orçamento, sem reuniões antes de saber quanto custa.",
+    "ctaPrimary": "Ver trabalhos de segurança",
+    "ctaSecondary": "Ver o software",
+    "featured": "Comece por aqui"
+  },
+  "catalog": {
+    "from": "A partir de",
+    "delivery": "Prazo",
+    "addToCart": "Adicionar ao carrinho",
+    "added": "Adicionado",
+    "learnMore": "Site do produto",
+    "oneTime": "pagamento único",
+    "interval": {
+      "month": "mês",
+      "year": "ano"
+    }
+  },
+  "cart": {
+    "title": "Carrinho",
+    "empty": "O seu carrinho está vazio.",
+    "subtotal": "Subtotal",
+    "checkout": "Finalizar compra",
+    "remove": "Remover",
+    "undo": "Anular",
+    "close": "Fechar carrinho"
+  },
+  "price": {
+    "locked": "Preço garantido nesta sessão"
+  },
+  "checkout": {
+    "title": "Pagamento",
+    "summary": "Resumo da encomenda",
+    "payWith": "Forma de pagamento",
+    "pay": "Pagar {amount}",
+    "securityNote": "Os dados do cartão são introduzidos na página do prestador e nunca passam pela ARGILETTE."
+  },
+  "payment": {
+    "submitting": "A enviar o seu pedido",
+    "awaitingTitle": "Verifique o seu telemóvel",
+    "awaitingDetail": "Aprove o pedido de pagamento na sua conta de mobile money. Costuma demorar um ou dois minutos.",
+    "verifying": "A confirmar com o seu operador",
+    "confirmed": "Pagamento confirmado",
+    "failed": "O pagamento não foi concluído",
+    "safeToLeave": "Pode fechar esta página. A compra conclui-se sozinha e enviaremos um e-mail assim que estiver feita.",
+    "elapsed": "À espera há {duration}",
+    "retry": "Tentar novamente"
+  },
+  "common": {
+    "loading": "A carregar",
+    "close": "Fechar",
+    "back": "Voltar"
+  }
+}

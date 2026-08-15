@@ -28,17 +28,17 @@ export interface PriceProps {
   currency: string;
   locale: string;
   /** Row from the `currencies` table, so the exponent is authoritative. */
-  meta?: CurrencyMeta;
+  meta?: CurrencyMeta | undefined;
   /** Already-localised interval, e.g. "month". Omit for one-time prices. */
-  interval?: string;
+  interval?: string | undefined;
   /**
    * Set when this price is held from the session's price lock and the live rate has since
    * moved. Requires `lockedLabel`.
    */
-  locked?: boolean;
+  locked?: boolean | undefined;
   /** Localised, e.g. "Price held for this session". */
-  lockedLabel?: string;
-  size?: 'display' | 'title-2' | 'body';
+  lockedLabel?: string | undefined;
+  size?: 'display' | 'title-2' | 'body' | undefined;
 }
 
 export function Price({

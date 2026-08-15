@@ -1,0 +1,18 @@
+{
+  "brand": {
+    "tagline": "Mshirika wako wa teknolojia"
+  },
+  "nav": {
+    "security": "Usalama na Uhandisi",
+    "software": "Programu",
+    "downloads": "Vipakuliwa",
+    "account": "Akaunti yako",
+    "cart": "Kikapu",
+    "language": "Lugha"
+  },
+  "common": {
+    "loading": "Inapakia",
+    "close": "Funga",
+    "back": "Rudi"
+  }
+}

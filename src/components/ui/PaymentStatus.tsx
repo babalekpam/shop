@@ -56,7 +56,7 @@ export interface PaymentStatusProps {
   startedAt: number;
   locale: string;
   strings: PaymentStatusStrings;
-  onRetry?: () => void;
+  onRetry?: (() => void) | undefined;
 }
 
 /** Below this, silence is normal. Above it, silence reads as breakage. */

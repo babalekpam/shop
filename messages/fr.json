@@ -1,0 +1,107 @@
+{
+  "brand": {
+    "tagline": "Votre partenaire technologique"
+  },
+  "nav": {
+    "security": "Sécurité & Ingénierie",
+    "software": "Logiciels",
+    "downloads": "Téléchargements",
+    "account": "Votre compte",
+    "cart": "Panier",
+    "cartWithCount": "Panier, {count, plural, =0 {vide} one {# article} other {# articles}}",
+    "skipToContent": "Aller au contenu",
+    "language": "Langue",
+    "openMenu": "Menu"
+  },
+  "home": {
+    "title": "Sécurité, logiciels et ingénierie — au prix affiché, sans devis.",
+    "lede": "Chaque produit et service a un prix et un bouton d'achat. Pas de formulaire de devis, pas d'appel de découverte avant de connaître le coût.",
+    "ctaPrimary": "Voir les prestations de sécurité",
+    "ctaSecondary": "Voir les logiciels",
+    "featured": "Commencez ici",
+    "credentials": "Les tests d'intrusion et les travaux de conformité sont réalisés par un titulaire d'un M.S. en cybersécurité, certifié Security+, sur une plateforme que nous exploitons nous-mêmes en production."
+  },
+  "tiers": {
+    "security": {
+      "name": "Sécurité & Ingénierie",
+      "blurb": "Tests d'intrusion, gestion continue des vulnérabilités, supervision SOC et automatisation de la conformité — ainsi que de l'ingénierie packagée, livrée à prix et à date fixes."
+    },
+    "software": {
+      "name": "Logiciels",
+      "blurb": "Abonnements au portefeuille de produits ARGILETTE : cabinets médicaux, CRM, agriculture, adressage et coffres-forts."
+    },
+    "downloads": {
+      "name": "Téléchargements",
+      "blurb": "Kits de démarrage, composants et spécifications. Livraison immédiate, sans abonnement."
+    }
+  },
+  "catalog": {
+    "from": "À partir de",
+    "delivery": "Délai",
+    "addToCart": "Ajouter au panier",
+    "added": "Ajouté",
+    "learnMore": "Site du produit",
+    "oneTime": "paiement unique",
+    "empty": "Rien ici pour l'instant.",
+    "interval": {
+      "month": "mois",
+      "year": "an"
+    },
+    "notInstant": "Il s'agit d'une prestation, pas d'un téléchargement immédiat. Le délai indiqué est celui sur lequel nous nous engageons."
+  },
+  "cart": {
+    "title": "Panier",
+    "empty": "Votre panier est vide.",
+    "emptyHint": "Tout le catalogue est affiché avec son prix et son bouton d'achat.",
+    "subtotal": "Sous-total",
+    "checkout": "Commander",
+    "remove": "Retirer",
+    "removed": "{name} retiré",
+    "undo": "Annuler",
+    "close": "Fermer le panier",
+    "taxNote": "La taxe est calculée au paiement par le prestataire, selon votre pays."
+  },
+  "price": {
+    "locked": "Prix garanti pour cette session",
+    "lockedExplainer": "Les taux de change ont évolué depuis l'ajout. Vous payez le prix affiché."
+  },
+  "checkout": {
+    "title": "Paiement",
+    "summary": "Récapitulatif",
+    "payWith": "Moyen de paiement",
+    "paddle": "Carte, PayPal et virement",
+    "paddleDetail": "Traité par Paddle, notre revendeur officiel. Prix taxes comprises lorsque la loi l'exige.",
+    "cinetpay": "Mobile money",
+    "cinetpayDetail": "Orange Money, MTN, Moov et Wave. Vous confirmez sur votre téléphone.",
+    "regionNote": "Nous avons proposé ce choix selon votre pays de connexion. Vous pouvez le modifier.",
+    "pay": "Payer {amount}",
+    "securityNote": "Les données de carte sont saisies sur la page du prestataire et ne transitent jamais par ARGILETTE.",
+    "servicesIntake": "Après le paiement, nous vous enverrons un formulaire pour planifier la prestation."
+  },
+  "payment": {
+    "submitting": "Envoi de votre demande",
+    "awaitingTitle": "Consultez votre téléphone",
+    "awaitingDetail": "Validez la demande de paiement sur votre compte mobile money. Cela prend généralement une à deux minutes.",
+    "verifying": "Confirmation auprès de votre opérateur",
+    "confirmed": "Paiement confirmé",
+    "failed": "Le paiement n'a pas abouti",
+    "safeToLeave": "Vous pouvez fermer cette page. L'achat se finalise tout seul et nous vous préviendrons par e-mail dès que c'est fait.",
+    "elapsed": "En attente depuis {duration}",
+    "retry": "Réessayer"
+  },
+  "footer": {
+    "products": "Produits",
+    "company": "Entreprise",
+    "legal": "Mentions légales",
+    "terms": "Conditions",
+    "privacy": "Confidentialité",
+    "refunds": "Remboursements",
+    "rights": "© {year} ARGILETTE LLC. Tous droits réservés.",
+    "builtWith": "Conçu et exploité par ARGILETTE."
+  },
+  "common": {
+    "loading": "Chargement",
+    "close": "Fermer",
+    "back": "Retour"
+  }
+}

@@ -18,8 +18,8 @@ import { useEffect, useRef, useState } from 'react';
 export interface ToolbarProps {
   children: React.ReactNode;
   /** `block-start` for a header, `block-end` for a bottom bar. Logical, never top/bottom. */
-  edge?: 'block-start' | 'block-end';
-  className?: string;
+  edge?: 'block-start' | 'block-end' | undefined;
+  className?: string | undefined;
 }
 
 export function Toolbar({ children, edge = 'block-start', className }: ToolbarProps) {
