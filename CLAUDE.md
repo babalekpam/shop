@@ -1,7 +1,7 @@
 # ARGILETTE.shop
 
 Commercial storefront and entitlement backbone for the ARGILETTE product portfolio.
-Next.js 15 (App Router) · TypeScript strict · Drizzle/Postgres · Keycloak · Paddle + CinetPay · 10 locales.
+Next.js 16 (App Router) · TypeScript strict · Drizzle/Postgres · Keycloak · Paddle + CinetPay · 10 locales.
 
 ## Read before you build
 

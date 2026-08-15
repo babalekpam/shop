@@ -2,7 +2,7 @@
 
 Commercial storefront and entitlement backbone for the ARGILETTE product portfolio.
 
-Next.js 15 (App Router) · TypeScript strict · 10 locales including RTL Arabic · Paddle + CinetPay ·
+Next.js 16 (App Router) · TypeScript strict · 10 locales including RTL Arabic · Paddle + CinetPay ·
 exponent-aware multi-currency · Apple fluid-interface design system.
 
 ```bash
@@ -59,7 +59,7 @@ must keep: build spec §9 — *never grant access from a redirect, only from a v
 
 ## Deploying
 
-The app is a standard Next.js 15 server-rendered application. It needs a Node runtime, not a
+The app is a standard Next.js 16 server-rendered application. It needs a Node runtime, not a
 static host — locale routing, geo currency and the CSP nonce all run per request.
 
 ```bash
@@ -94,13 +94,13 @@ prerendered page. That is a real cost against the Lighthouse target, taken delib
 the marketing pages later need to be static, move CSP enforcement to the Cloudflare edge using
 script hashes rather than relaxing it here.
 
-**`npm audit` reports 3 high-severity advisories.** All are transitive through `next@15.5.23`
-(`postcss`, `sharp`) and all are fixed only by upgrading to Next 16 — a framework major the build
-spec does not call for. Neither is reachable in this codebase today: the postcss advisories need
-attacker-controlled CSS at build time (ours is entirely first-party), and `sharp` backs
-`next/image`, which this app does not use. The security spec's CI gate blocks merges on high
-findings, so this needs an explicit decision — upgrade, or record a reviewed exception. It should
-not be left to sit unnoticed.
+**The stack is on Next 16, not the 15 the build spec originally named.** Next 15 pins `postcss`
+and `sharp` versions carrying high-severity advisories, clearable only by the major upgrade.
+Neither was reachable here — the postcss advisories need attacker-controlled CSS at build time and
+ours is entirely first-party, and `sharp` backs `next/image`, which this app does not use — but
+security spec §11 blocks merges on high findings, and a permanently-red audit trains people to
+ignore it. `npm audit` now reports zero vulnerabilities. The build spec's stack table records the
+change and the reason.
 
 ---
 

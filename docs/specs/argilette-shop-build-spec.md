@@ -21,7 +21,7 @@ Job 2 is what matters long-term. A checkout page is replaceable; a central entit
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Framework | Next.js 15 (App Router), TypeScript strict | Matches existing ARGILETTE codebases |
+| Framework | Next.js 16 (App Router), TypeScript strict | Matches existing ARGILETTE codebases. Raised from 15: Next 15's pinned `postcss` and `sharp` carry high-severity advisories that only a major upgrade clears, and security spec §11 blocks merges on high findings |
 | Database | PostgreSQL (Neon) | Existing infra |
 | ORM | Drizzle | Typed migrations |
 | Auth | Keycloak (existing Hetzner instance) | Central identity — do not build local auth |

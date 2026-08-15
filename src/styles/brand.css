@@ -136,10 +136,23 @@
   text-transform: uppercase;
 }
 
-/* Arabic does not take letterspacing — it breaks the cursive joins. The wordmark stays
- * Latin (it is a proper noun and a trademark), but the tagline is translated, so it must
- * lose the tracking when it is set in Arabic. */
-:lang(ar) .brand-tagline {
+/* Arabic does not take letterspacing — it breaks the cursive joins — so the type scale
+ * zeroes tracking under `:lang(ar)`. Two corrections are needed here, because `:lang()`
+ * matches every *descendant* of the element carrying the language, not just that element:
+ * without these the reset reaches into the lockup itself.
+ *
+ * The wordmark is a Latin trademark. It is not translated and it is not set in Arabic
+ * script, so it keeps its tracking on every locale — losing it is a brand defect, not a
+ * typographic accommodation. `!important` is required only to outrank the equally
+ * important reset it is correcting. */
+.brand-wordmark:lang(ar) {
+  letter-spacing: 0.28em !important;
+  margin-inline-end: -0.28em;
+}
+
+/* The tagline *is* translated, so when it is set in Arabic it correctly loses the
+ * tracking and takes a slightly larger size for legibility at this weight. */
+.brand-tagline:lang(ar) {
   letter-spacing: 0 !important;
   margin-inline-end: 0;
   font-size: 0.7em;
