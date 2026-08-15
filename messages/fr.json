@@ -23,8 +23,8 @@
   },
   "tiers": {
     "security": {
-      "name": "Sécurité & Ingénierie",
-      "blurb": "Tests d'intrusion, gestion continue des vulnérabilités, supervision SOC et automatisation de la conformité — ainsi que de l'ingénierie packagée, livrée à prix et à date fixes."
+      "name": "Sécurité",
+      "blurb": "Tests d'intrusion, gestion continue des vulnérabilités, supervision SOC et automatisation de la conformité — SOC 2, HIPAA, PCI-DSS et NIST CSF."
     },
     "software": {
       "name": "Logiciels",
@@ -33,6 +33,10 @@
     "downloads": {
       "name": "Téléchargements",
       "blurb": "Kits de démarrage, composants et spécifications. Livraison immédiate, sans abonnement."
+    },
+    "engineering": {
+      "name": "Ingénierie",
+      "blurb": "Pages de destination, sprints MVP, intégrations de paiement et forfaits — prix fixe, date fixe, un logiciel qui fonctionne au bout."
     }
   },
   "catalog": {

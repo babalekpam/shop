@@ -33,7 +33,7 @@ export function SkuCard({ sku, currency }: SkuCardProps) {
     sku.interval === 'once' ? undefined : t(`interval.${sku.interval}` as 'interval.month');
 
   return (
-    <article className="sku-card">
+    <article className="sku-card" data-tier={sku.tier}>
       <div className="sku-card-body">
         <h3 className="type-title-3">{localise(sku.name, locale)}</h3>
         <p className="type-callout sku-card-summary">{localise(sku.summary, locale)}</p>

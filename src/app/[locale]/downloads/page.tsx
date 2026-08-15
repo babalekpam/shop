@@ -16,7 +16,7 @@ export default async function DownloadsPage({
 
   return (
     <>
-      <section className="section page-head">
+      <section className="section page-head" data-tier="downloads">
         <h1 className="type-title-1">{t('downloads.name')}</h1>
         <p className="type-body page-lede">{t('downloads.blurb')}</p>
       </section>

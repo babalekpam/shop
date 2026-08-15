@@ -23,8 +23,8 @@
   },
   "tiers": {
     "security": {
-      "name": "Security & Engineering",
-      "blurb": "Penetration testing, continuous vulnerability management, SOC monitoring and compliance automation — plus productized engineering, delivered to a fixed price and a fixed date."
+      "name": "Security",
+      "blurb": "Penetration testing, continuous vulnerability management, SOC monitoring and compliance automation — SOC 2, HIPAA, PCI-DSS and NIST CSF."
     },
     "software": {
       "name": "Software",
@@ -33,6 +33,10 @@
     "downloads": {
       "name": "Downloads",
       "blurb": "Starters, kits and specifications. Instant delivery, no subscription."
+    },
+    "engineering": {
+      "name": "Engineering",
+      "blurb": "Landing pages, MVP sprints, payment integrations and retainers — fixed price, fixed date, working software at the end of it."
     }
   },
   "catalog": {

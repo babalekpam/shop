@@ -242,6 +242,45 @@ Per skill §12, with the budget from §1.3 above.
 
 ---
 
+## 3a. Colour — four hues, one per tier
+
+The catalog has four tiers, and each one owns a hue: **red** for security work (risk), **blue** for
+engineering (build), **green** for the software portfolio (growth), **amber** for downloads
+(immediate). A four-segment strip at the top of every page states the whole set.
+
+This is navigation, not decoration. A customer learns that red means security work, and after that
+a red card is legible before its heading is read. Four colours used *decoratively* — one per button
+because variety looks lively — is the failure mode this exists to avoid: it destroys the one thing
+colour is good at, which is telling you where you are.
+
+**Each hue ships in four roles, because one value cannot do four jobs.**
+
+| Role | Use | Why it exists |
+|---|---|---|
+| `--hue-*-vivid` | Card top bars, heading rules, the top strip | Saturated. Never behind text. |
+| `--hue-*-ink` | Coloured text and icons | Darkened to clear 4.5:1 on our surfaces |
+| `--hue-*-wash` | Tinted card backgrounds on hover | Light enough to carry body text |
+| `--hue-*-solid` + `--hue-*-on` | Solid button fills and their text | Paired, because the correct text colour is not the same for every hue |
+
+Components never name a colour. A `data-tier` attribute sets `--tier`, `--tier-ink`, `--tier-wash`
+and `--tier-solid`, and everything inside reads those — so a card, its heading and its button cannot
+drift apart, and adding a tier is one CSS block rather than an audit.
+
+**Amber takes dark text, and this is the part most often got wrong.** Forcing white onto amber means
+darkening the amber until it reads as mud; the accessible-looking result is an ugly olive that no
+one wanted. Amber instead keeps its bright value and takes near-black text, which clears 8:1.
+Yellow-family hues almost always want this inversion, which is why fill and text are a *pair* of
+tokens rather than a fill plus an assumed white.
+
+**Both sets invert on dark surfaces** — the inks and solids lighten, and the text on the solids goes
+dark. A single `--hue-ink-fg`-style constant would be wrong in one theme or the other.
+
+Contrast is asserted in the browser, not eyeballed: the check computes WCAG ratios for every tier
+heading against its card and every primary button against its own fill, in light and dark. It caught
+white-on-light-amber at 1.71:1 during this work.
+
+---
+
 ## 4. Typography
 
 ### 4.1 The system font is right, and it is not enough for us

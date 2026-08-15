@@ -69,6 +69,15 @@ export default async function LocaleLayout({
                 ? ((messages.nav as Record<string, string>).skipToContent ?? 'Skip to content')
                 : 'Skip to content'}
             </a>
+            {/* The four tier hues, stated once at the top of every page. Decorative —
+                the colour system is reinforced by the cards and headings that carry
+                real meaning, so this is hidden from assistive tech. */}
+            <div className="hue-strip" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
             <Header />
             <main id="main" className="site-main">
               {children}

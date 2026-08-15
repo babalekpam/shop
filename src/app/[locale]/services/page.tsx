@@ -17,7 +17,7 @@ export default async function ServicesPage({
 
   return (
     <>
-      <section className="section page-head">
+      <section className="section page-head" data-tier="security">
         <h1 className="type-title-1">{t('security.name')}</h1>
         <p className="type-body page-lede">{t('security.blurb')}</p>
         {/* Services are not instant delivery. Saying so before payment, not after, is the

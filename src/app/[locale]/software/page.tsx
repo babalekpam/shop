@@ -16,7 +16,7 @@ export default async function SoftwarePage({
 
   return (
     <>
-      <section className="section page-head">
+      <section className="section page-head" data-tier="software">
         <h1 className="type-title-1">{t('software.name')}</h1>
         <p className="type-body page-lede">{t('software.blurb')}</p>
       </section>

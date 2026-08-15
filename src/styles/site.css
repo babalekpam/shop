@@ -52,6 +52,24 @@ a {
   inset-block-start: var(--space-md);
 }
 
+/* The whole colour system, stated in 3px at the top of every page. It is the legend
+ * for the tier hues and it means colour is present above the fold everywhere, not only
+ * on pages that happen to have cards in view. */
+.hue-strip {
+  display: flex;
+  block-size: 3px;
+  flex: none;
+}
+
+.hue-strip span {
+  flex: 1;
+}
+
+.hue-strip span:nth-child(1) { background: var(--hue-red-vivid); }
+.hue-strip span:nth-child(2) { background: var(--hue-blue-vivid); }
+.hue-strip span:nth-child(3) { background: var(--hue-green-vivid); }
+.hue-strip span:nth-child(4) { background: var(--hue-amber-vivid); }
+
 /* ---- Header --------------------------------------------------------------- */
 
 .site-header {
@@ -180,8 +198,8 @@ a {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: var(--space-lg);
-  padding-block: var(--space-3xl) var(--space-2xl);
+  gap: var(--space-md);
+  padding-block: var(--space-xl) var(--space-lg);
 }
 
 .hero-title {
@@ -212,6 +230,72 @@ a {
   border-radius: var(--radius-md);
 }
 
+/* ---- Category hues --------------------------------------------------------
+ * One hue per tier, set once on any element carrying `data-tier` and inherited
+ * by everything inside it. A card, a heading and a button in the same tier
+ * cannot drift apart, because none of them names a colour — they all read
+ * `--tier`.
+ *
+ * The mapping is semantic, not arbitrary: red for security work (risk), blue
+ * for engineering (build), green for the live software portfolio (growth),
+ * amber for downloads (immediate). */
+
+[data-tier='security'] {
+  --tier: var(--hue-red-vivid);
+  --tier-ink: var(--hue-red-ink);
+  --tier-wash: var(--hue-red-wash);
+  --tier-solid: var(--hue-red-solid);
+  --tier-on-solid: var(--hue-red-on);
+}
+
+[data-tier='engineering'] {
+  --tier: var(--hue-blue-vivid);
+  --tier-ink: var(--hue-blue-ink);
+  --tier-wash: var(--hue-blue-wash);
+  --tier-solid: var(--hue-blue-solid);
+  --tier-on-solid: var(--hue-blue-on);
+}
+
+[data-tier='software'] {
+  --tier: var(--hue-green-vivid);
+  --tier-ink: var(--hue-green-ink);
+  --tier-wash: var(--hue-green-wash);
+  --tier-solid: var(--hue-green-solid);
+  --tier-on-solid: var(--hue-green-on);
+}
+
+[data-tier='downloads'] {
+  --tier: var(--hue-amber-vivid);
+  --tier-ink: var(--hue-amber-ink);
+  --tier-wash: var(--hue-amber-wash);
+  --tier-solid: var(--hue-amber-solid);
+  --tier-on-solid: var(--hue-amber-on);
+}
+
+/* Untiered surfaces fall back to the brand accent rather than inheriting a hue
+ * from an ancestor by accident. */
+:root {
+  --tier: var(--accent);
+  --tier-ink: var(--accent);
+  --tier-wash: var(--accent-quiet);
+  --tier-solid: var(--accent);
+  --tier-on-solid: var(--accent-fg);
+}
+
+/* A page heading carries its tier's colour as a short rule, not as coloured
+ * text — a full heading in amber or red shouts, and shouting four different
+ * ways across a catalog is exhausting. */
+.page-head h1::after,
+.section-heading::after {
+  content: '';
+  display: block;
+  inline-size: 3rem;
+  block-size: 3px;
+  border-radius: var(--radius-full);
+  background: var(--tier);
+  margin-block-start: var(--space-sm);
+}
+
 /* ---- Cards ---------------------------------------------------------------- */
 
 .tier-grid,
@@ -221,8 +305,16 @@ a {
   grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
 }
 
+/* The four tier cards are a set — they are the legend for the colour system, and a
+ * fourth card wrapping onto its own row reads as an afterthought rather than the
+ * fourth of four. A narrower minimum keeps them on one row wherever there is space. */
+.tier-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+}
+
 .tier-card,
 .sku-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -230,10 +322,23 @@ a {
   border: 1px solid var(--separator);
   border-radius: var(--radius-lg);
   background: var(--bg-elevated);
+  overflow: hidden;
   /* Only transform and opacity — nothing here costs layout or paint. */
   transition:
     transform var(--response-snappy) var(--ease-out),
     opacity var(--response-snappy) var(--ease-out);
+}
+
+/* The tier's colour as a bar along the block start. A pseudo-element rather
+ * than a border, so it can sit inside the radius and does not shift the box. */
+.tier-card::before,
+.sku-card::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: 3px;
+  background: var(--tier);
 }
 
 .tier-card:hover,
@@ -246,6 +351,21 @@ a {
   margin: 0;
 }
 
+/* Tier cards are the one place the hue carries the heading: on the home page
+ * they are the legend for the whole system, so the colour has to be
+ * unmistakable. `-ink` rather than `-vivid`, because this is text. */
+.tier-card h2 {
+  color: var(--tier-ink);
+}
+
+.tier-card {
+  padding-block-start: calc(var(--space-lg) + 3px);
+}
+
+.tier-card:hover {
+  background: var(--tier-wash);
+}
+
 .tier-card p,
 .sku-card-summary {
   margin: 0;
@@ -254,6 +374,33 @@ a {
 
 .sku-card {
   justify-content: space-between;
+  padding-block-start: calc(var(--space-lg) + 3px);
+}
+
+/* Controls inside a tier adopt its hue. `-ink` on solid fills, because those
+ * carry white text and the vivid values do not clear 4.5:1 against it — amber
+ * least of all, which is the usual way a four-colour palette ships unreadable.
+ *
+ * The primary action stays the only solid fill on any card, so the colour never
+ * has to compete with itself to say which control commits. */
+[data-tier] .btn-primary {
+  background: var(--tier-solid);
+  /* Paired with the fill rather than assumed: three hues take white here and amber takes
+   * near-black, and both the fill and its text flip on dark surfaces. */
+  color: var(--tier-on-solid);
+}
+
+[data-tier] .btn-secondary {
+  background: var(--tier-wash);
+  color: var(--tier-ink);
+}
+
+[data-tier] .btn-plain {
+  color: var(--tier-ink);
+}
+
+[data-tier] .btn:focus-visible {
+  outline-color: var(--tier-ink);
 }
 
 .sku-card-body {

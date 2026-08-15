@@ -18,8 +18,12 @@ export default async function HomePage({
   const tBrand = await getTranslations({ locale, namespace: 'brand' });
   const { currency } = await getRegion();
 
+  // All four tiers, each with its own hue. The home page is where the colour system is
+  // learned, so every hue has to appear together at least once — after that a red card
+  // means security work anywhere in the catalog without a legend.
   const tiers = [
     { key: 'security', href: `/${locale}/services` },
+    { key: 'engineering', href: `/${locale}/services` },
     { key: 'software', href: `/${locale}/software` },
     { key: 'downloads', href: `/${locale}/downloads` },
   ] as const;
@@ -43,7 +47,7 @@ export default async function HomePage({
       <section className="section">
         <div className="tier-grid">
           {tiers.map((tier) => (
-            <Link key={tier.key} href={tier.href} className="tier-card">
+            <Link key={tier.key} href={tier.href} className="tier-card" data-tier={tier.key}>
               <h2 className="type-title-3">{tTiers(`${tier.key}.name`)}</h2>
               <p className="type-callout">{tTiers(`${tier.key}.blurb`)}</p>
             </Link>

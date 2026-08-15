@@ -66,5 +66,11 @@
     "loading": "A carregar",
     "close": "Fechar",
     "back": "Voltar"
+  },
+  "tiers": {
+    "engineering": {
+      "name": "Engenharia",
+      "blurb": "Páginas de destino, sprints de MVP, integrações de pagamento e avenças — preço fixo, data fixa."
+    }
   }
 }

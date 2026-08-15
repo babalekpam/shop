@@ -8,8 +8,11 @@
 
 :root {
   /* Core palette */
-  --brand-navy: #131c26;
-  --brand-navy-raised: #1b2733;
+  /* Softened from the artwork's near-black. The logo files sit on #131c26, which is
+   * right for a banner and heavy for a whole interface — an app-sized area of it reads
+   * as a void rather than a surface. These keep the hue and lift the value. */
+  --brand-navy: #1a2431;
+  --brand-navy-raised: #24303f;
 
   --brand-blue-300: #7db0e0;
   --brand-blue-400: #5c9bd6;
@@ -21,6 +24,55 @@
    * accent. Use for editorial accenting, never as a second call-to-action colour. */
   --brand-terracotta-500: #c0563c;
   --brand-terracotta-400: #d09080;
+
+  /* ---- Category hues -------------------------------------------------------
+   * Four colours, one per catalog tier. They are *navigation*, not decoration:
+   * a customer learns that security work is red and downloads are amber, and
+   * every page, card and button in that tier agrees. Used at random they would
+   * read as noise; used systematically they tell you where you are.
+   *
+   * Each hue ships in three roles, because one value cannot do all three jobs:
+   *
+   *   --*-vivid  large areas and fills. Saturated, never used behind text.
+   *   --*-ink    text, icons and solid button fills. Darkened to clear 4.5:1
+   *              on our surfaces — the vivid values do not, especially amber,
+   *              which is the one people most often ship unreadable.
+   *   --*-wash   tinted backgrounds, at a tint light enough to carry body text.
+   */
+  --hue-red-vivid: #dc3a45;
+  --hue-red-ink: #b02730;
+  --hue-red-wash: #fdf0f1;
+
+  --hue-blue-vivid: #2f6fed;
+  --hue-blue-ink: #1d4fb8;
+  --hue-blue-wash: #eef3fe;
+
+  --hue-green-vivid: #1fa971;
+  --hue-green-ink: #0d7a4e;
+  --hue-green-wash: #e9f8f1;
+
+  --hue-amber-vivid: #f0a92c;
+  --hue-amber-ink: #8f5f06;
+  --hue-amber-wash: #fdf4e3;
+
+  /* Solid fills, and the text that goes on them.
+   *
+   * Three of the four take white text on a darkened fill. Amber does not: forcing white
+   * onto amber means darkening it until it reads as mud, which is what a "make it pass
+   * AA" pass usually produces. Amber instead keeps its bright value and takes *dark*
+   * text, which clears 8:1 and actually looks like the colour. Yellow-family hues almost
+   * always want this inversion. */
+  --hue-red-solid: #b02730;
+  --hue-red-on: #ffffff;
+
+  --hue-blue-solid: #1d4fb8;
+  --hue-blue-on: #ffffff;
+
+  --hue-green-solid: #0d7a4e;
+  --hue-green-on: #ffffff;
+
+  --hue-amber-solid: #f0a92c;
+  --hue-amber-on: #3a2600;
 
   --brand-cream: #faf5ef;
   --brand-ink: #1c2b3a;
@@ -41,6 +93,27 @@
     --brand-wordmark: #ffffff;
     --brand-tagline: #93a3b4;
     --brand-rule: #4a7fb5;
+
+    /* On dark surfaces the roles invert: the ink values become *lighter* than the
+     * vivid ones, because contrast now runs the other way. Washes become low-alpha
+     * tints rather than pale solids, so they sit on the surface instead of glowing. */
+    --hue-red-ink: #ff8f8f;
+    --hue-red-wash: rgba(220, 58, 69, 0.14);
+    --hue-blue-ink: #85aeff;
+    --hue-blue-wash: rgba(47, 111, 237, 0.16);
+    --hue-green-ink: #55d8a0;
+    --hue-green-wash: rgba(31, 169, 113, 0.16);
+    --hue-amber-ink: #f5bd5c;
+    --hue-amber-wash: rgba(240, 169, 44, 0.16);
+    /* On dark surfaces the fills lighten and the text on them goes dark. */
+    --hue-red-solid: #ff8f8f;
+    --hue-red-on: #3a0d10;
+    --hue-blue-solid: #85aeff;
+    --hue-blue-on: #0a1a3d;
+    --hue-green-solid: #55d8a0;
+    --hue-green-on: #04281a;
+    --hue-amber-solid: #f5bd5c;
+    --hue-amber-on: #3a2600;
   }
 }
 
@@ -50,6 +123,27 @@
   --brand-wordmark: #ffffff;
   --brand-tagline: #93a3b4;
   --brand-rule: #4a7fb5;
+
+  /* On dark surfaces the roles invert: the ink values become *lighter* than the
+   * vivid ones, because contrast now runs the other way. Washes become low-alpha
+   * tints rather than pale solids, so they sit on the surface instead of glowing. */
+  --hue-red-ink: #ff8f8f;
+  --hue-red-wash: rgba(220, 58, 69, 0.14);
+  --hue-blue-ink: #85aeff;
+  --hue-blue-wash: rgba(47, 111, 237, 0.16);
+  --hue-green-ink: #55d8a0;
+  --hue-green-wash: rgba(31, 169, 113, 0.16);
+  --hue-amber-ink: #f5bd5c;
+  --hue-amber-wash: rgba(240, 169, 44, 0.16);
+  /* On dark surfaces the fills lighten and the text on them goes dark. */
+  --hue-red-solid: #ff8f8f;
+  --hue-red-on: #3a0d10;
+  --hue-blue-solid: #85aeff;
+  --hue-blue-on: #0a1a3d;
+  --hue-green-solid: #55d8a0;
+  --hue-green-on: #04281a;
+  --hue-amber-solid: #f5bd5c;
+  --hue-amber-on: #3a2600;
 }
 
 /* ---- Lockup --------------------------------------------------------------- */
