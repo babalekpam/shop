@@ -53,9 +53,16 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 
   const handlePointerMove = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
     if (!origin.current) return;
+    // Measured against the button's own bounds plus the slop, not against the distance
+    // from the press origin: a press that starts at one edge of a wide button and slides
+    // to the other edge has never left the control, and should stay pressed.
+    const rect = event.currentTarget.getBoundingClientRect();
     const withinSlop =
-      Math.abs(event.clientX - origin.current.x) <= CANCEL_SLOP + event.currentTarget.offsetWidth / 2 &&
-      Math.abs(event.clientY - origin.current.y) <= CANCEL_SLOP + event.currentTarget.offsetHeight / 2;
+      event.clientX >= rect.left - CANCEL_SLOP &&
+      event.clientX <= rect.right + CANCEL_SLOP &&
+      event.clientY >= rect.top - CANCEL_SLOP &&
+      event.clientY <= rect.bottom + CANCEL_SLOP;
+    // Dragging away cancels, dragging back restores. (Skill §10.)
     setPressed(withinSlop);
   }, []);
 

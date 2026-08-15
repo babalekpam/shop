@@ -16,6 +16,11 @@ import { clampWithRubberband } from './rubberband';
 import { VelocityTracker } from './velocity';
 import { resolveDirection, toLogicalInline, type Direction } from './direction';
 
+export interface Bounds {
+  min: number;
+  max: number;
+}
+
 export interface DragState {
   /** Offset from the drag origin, in logical units — already rubber-banded. */
   offset: number;
@@ -29,10 +34,17 @@ export interface UseDragOptions {
    * does not. Bottom sheets are `block`; side drawers are `inline`.
    */
   axis: 'inline' | 'block';
-  /** Drag bounds in logical units. Movement past them resists rather than stopping. */
-  bounds?: { min: number; max: number };
+  /**
+   * Drag bounds in logical units. Movement past them resists rather than stopping.
+   *
+   * Pass a function when the bounds depend on a measurement — a sheet does not know its
+   * own height until it is laid out, and a plain object captured during the first render
+   * would be `{min: 0, max: 0}` for the whole of the first gesture. Functions are resolved
+   * once per gesture, at pointer-down.
+   */
+  bounds?: Bounds | (() => Bounds);
   /** Size of the dragged dimension, in px — scales the rubber-band resistance. */
-  dimension?: number;
+  dimension?: number | (() => number);
   /**
    * Movement required before the gesture commits to this axis, in px. Below it, nothing
    * moves and the browser keeps the gesture — so a vertical scroll inside a horizontally
@@ -83,6 +95,11 @@ export function useDrag(options: UseDragOptions): UseDragResult {
   const committed = useRef(false);
   const abandoned = useRef(false);
   const pointerId = useRef<number | null>(null);
+
+  // Resolved once per gesture rather than read from the render closure, so a measurement
+  // taken in onDragStart is the one this gesture actually uses.
+  const activeBounds = useRef<Bounds | undefined>(undefined);
+  const activeDimension = useRef(0);
 
   /** Physical pointer position → logical offset along the tracked axis. */
   const logicalDelta = useCallback(
@@ -138,15 +155,26 @@ export function useDrag(options: UseDragOptions): UseDragResult {
 
         committed.current = true;
         setIsDragging(true);
+        // Measurement happens here, so bounds are resolved *after* it, not before.
         onDragStart?.();
+        activeBounds.current = typeof bounds === 'function' ? bounds() : bounds;
+        activeDimension.current = typeof dimension === 'function' ? dimension() : dimension;
       }
 
       // Subtract the hysteresis in the direction of travel, so committing to the gesture
       // does not jump the element by the threshold distance.
       const travelled = delta - Math.sign(delta) * hysteresis;
 
-      const offset = bounds
-        ? clampWithRubberband(travelled, bounds.min, bounds.max, dimension || Math.abs(bounds.max - bounds.min) || 1)
+      const resolvedBounds = activeBounds.current;
+      const offset = resolvedBounds
+        ? clampWithRubberband(
+            travelled,
+            resolvedBounds.min,
+            resolvedBounds.max,
+            activeDimension.current ||
+              Math.abs(resolvedBounds.max - resolvedBounds.min) ||
+              1,
+          )
         : travelled;
 
       tracker.current.sample(offset, event.timeStamp);
@@ -170,6 +198,9 @@ export function useDrag(options: UseDragOptions): UseDragResult {
       if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
+
+      activeBounds.current = undefined;
+      activeDimension.current = 0;
 
       if (!wasCommitted || abandoned.current) {
         abandoned.current = false;

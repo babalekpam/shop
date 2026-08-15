@@ -234,11 +234,22 @@ html {
     scroll-behavior: auto !important;
   }
 
-  .sheet,
-  .drawer,
-  .popover {
-    transition: opacity var(--duration-crossfade) var(--ease-out) !important;
-    transform: none !important;
+  /* Deliberately NOT `transform: none !important` here.
+   *
+   * A stylesheet `!important` outranks the element's own inline transform, so forcing it
+   * to none would pin every closed sheet at its open position — permanently on screen.
+   * The transform is how the sheet is hidden, not decoration.
+   *
+   * Instead: the position change becomes instant (the spring collapses to a cross-fade
+   * duration in preferences.ts) and opacity carries the transition. Dragging still tracks
+   * the finger, because direct manipulation is feedback, not vestibular motion. */
+  .sheet {
+    transition: opacity var(--duration-crossfade) var(--ease-out);
+    opacity: 0;
+  }
+
+  .sheet[data-open] {
+    opacity: 1;
   }
 }
 

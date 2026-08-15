@@ -443,13 +443,24 @@ Applied to any PR that touches the interface.
 
 Additions to build spec §14, verifiable in Sprint 6's QA pass.
 
+**What is already machine-checked** (`npm test`): the spring mapping and its bounce discipline,
+Apple's projection function, velocity-sign commit, rubber-banding, the windowed velocity tracker,
+RTL axis flipping, currency exponents, press feedback on pointer-down with cancel-and-restore, drag
+hysteresis and axis locking, bounds resolved after measurement, flick-to-dismiss firing exactly
+once, and — mechanically — that no primitive server-renders a `style` attribute.
+
+**What still needs a browser and is not yet verified:** 60fps under a real compositor, the actual
+appearance of blur and vibrancy, whether an interrupt looks seamless at full speed, Lighthouse on a
+reference device, and glyph coverage in the production typeface. jsdom has no layout and no paint,
+so nothing below marked *(browser)* can be claimed from the test suite.
+
 - [ ] Every draggable surface can be grabbed mid-animation and reversed without a visual jump
 - [ ] A hard flick lands where the projection says, not at the nearest snap point to the release
 - [ ] Drag direction is correct in `dir="rtl"` on every gesture surface
 - [ ] No server-rendered `style` attribute anywhere in the app — asserted in CI
-- [ ] The app renders correctly with `style-src 'self' 'nonce-…'` and no `unsafe-inline`
-- [ ] Sheets and drawers hold 60fps on a mid-range Android reference device
-- [ ] Yoruba and Ewe diacritic coverage asserted in CI against every locale's sample strings
+- [ ] The app renders correctly with `style-src 'self' 'nonce-…'` and no `unsafe-inline` *(browser)*
+- [ ] Sheets and drawers hold 60fps on a mid-range Android reference device *(browser)*
+- [ ] Yoruba and Ewe diacritic coverage asserted in CI against every locale's sample strings *(browser)*
 - [ ] The mobile-money waiting state is fully legible with all animation disabled
 - [ ] The mobile-money waiting state contains no animation looping near 0.2 Hz
 - [ ] Closing the browser during a mobile-money wait still completes the purchase, and the interface

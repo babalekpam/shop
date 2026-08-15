@@ -16,14 +16,23 @@
  *   · symmetric path: it leaves the way it arrived, expressed as a logical edge so RTL
  *     is correct by construction                                           (skill §7)
  *
- * The resting (closed) transform lives in sheet.css, never in a `style` attribute — a
- * server-rendered inline style is blocked by our CSP and the sheet would render on top of
- * the page until hydration. Runtime values are written through CSSOM, which is not
- * CSP-restricted. (Design system §1.2.)
+ * Two implementation details carry most of that:
+ *
+ * **One motion value owns the position.** Dragging writes to it and the release spring
+ * animates it, so an interrupt always resumes from the live on-screen value. Writing
+ * `style.transform` directly during the drag and then handing the element to `animate()`
+ * looks equivalent and is not — Motion would animate from its own stale cached value and
+ * the sheet would jump on the first interrupt, which is precisely the failure skill §3 is
+ * about.
+ *
+ * **The resting transform lives in sheet CSS, never in a `style` attribute.** A
+ * server-rendered inline style is blocked by our CSP, so the sheet would render on top of
+ * the page until hydration. The subscriber below only starts writing once the panel has
+ * been measured. (Design system §1.2.)
  */
 
 import { useCallback, useEffect, useRef } from 'react';
-import { animate } from 'motion/react';
+import { animate, useMotionValue } from 'motion/react';
 import { useDrag } from '../../lib/motion/useDrag';
 import { resolveSnapTarget, shouldCommit } from '../../lib/motion/project';
 import { springs, toMotionSpring } from '../../lib/motion/spring';
@@ -68,79 +77,88 @@ export function Sheet({
 }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
-  const size = useRef(0);
+
+  /** The single source of truth for where the sheet is, in logical units. */
+  const offset = useMotionValue(0);
+
+  const extent = useRef(0);
+  const measured = useRef(false);
   const directionRef = useRef<'ltr' | 'rtl'>('ltr');
+  /** The open state the sheet was last animated toward, so a gesture and the controlled
+   *  prop cannot both settle it and fight each other. */
+  const settledOpen = useRef<boolean | null>(null);
 
   const axis = edgeAxis(edge);
   /** Logical offsets are dismiss-positive on end edges, dismiss-negative on start edges. */
   const dismissDirection = edge === 'block-end' || edge === 'inline-end' ? 1 : -1;
 
+  const measure = useCallback(() => {
+    const panel = panelRef.current;
+    if (!panel) return extent.current;
+    const rect = panel.getBoundingClientRect();
+    const size = axis === 'block' ? rect.height : rect.width;
+    // A collapsed measurement (display:none, not yet laid out) would pin the bounds to
+    // zero and make the sheet immovable. Keep the last good value instead.
+    if (size > 0) {
+      extent.current = size;
+      measured.current = true;
+    }
+    return extent.current;
+  }, [axis]);
+
   /** Write a logical offset to the panel as a physical transform, via CSSOM. */
   const paint = useCallback(
-    (offset: number) => {
+    (value: number) => {
       const panel = panelRef.current;
       if (!panel) return;
       panel.style.transform =
         axis === 'block'
-          ? `translateY(${offset}px)`
-          : `translateX(${toPhysicalX(offset, directionRef.current)}px)`;
+          ? `translateY(${value}px)`
+          : `translateX(${toPhysicalX(value, directionRef.current)}px)`;
 
-      if (modal && scrimRef.current && size.current > 0) {
-        const progress = 1 - Math.min(1, Math.abs(offset) / size.current);
-        scrimRef.current.style.opacity = String(progress);
+      if (modal && scrimRef.current && extent.current > 0) {
+        scrimRef.current.style.opacity = String(
+          1 - Math.min(1, Math.abs(value) / extent.current),
+        );
       }
     },
     [axis, modal],
   );
 
-  const measure = useCallback(() => {
-    const panel = panelRef.current;
-    if (!panel) return 0;
-    const rect = panel.getBoundingClientRect();
-    size.current = axis === 'block' ? rect.height : rect.width;
-    return size.current;
-  }, [axis]);
-
   const settle = useCallback(
     (target: number, velocity: number, momentum: boolean) => {
-      const panel = panelRef.current;
-      if (!panel) return;
-
       const prefs = readPreferences();
       // Bounce is earned: overshoot only because a flick preceded it. A sheet closed by
       // its button uses the critically damped default instead.
       const spring = resolveSpring(momentum ? springs.sheet : springs.ui, velocity, prefs);
 
-      const from = panel.style.transform;
-      void from; // Motion reads the presentation value itself; retained for debugging.
-
-      animate(
-        panel,
-        axis === 'block'
-          ? { y: target }
-          : { x: toPhysicalX(target, directionRef.current) },
-        spring,
-      );
+      // Animating the motion value, not the element — so this resumes from wherever the
+      // sheet visually is, including mid-flight.
+      animate(offset, target, spring);
 
       if (modal && scrimRef.current) {
-        animate(
-          scrimRef.current,
-          { opacity: target === 0 ? 1 : 0 },
-          toMotionSpring(springs.ui),
-        );
+        animate(scrimRef.current, { opacity: target === 0 ? 1 : 0 }, toMotionSpring(springs.ui));
       }
 
-      // Blur is stepped, never interpolated — animating the radius re-runs the backdrop
-      // readback every frame. (Design system §1.3.)
-      panel.dataset.materialised = target === 0 ? 'true' : 'false';
+      const panel = panelRef.current;
+      if (panel) {
+        // Blur is stepped, never interpolated — animating the radius re-runs the backdrop
+        // readback every frame. (Design system §1.3.)
+        panel.dataset.materialised = target === 0 ? 'true' : 'false';
+      }
     },
-    [axis, modal],
+    [modal, offset],
   );
 
   const { isDragging, handlers } = useDrag({
     axis,
-    bounds: dismissDirection === 1 ? { min: 0, max: size.current } : { min: -size.current, max: 0 },
-    dimension: size.current,
+    // Resolved per gesture, after onDragStart has measured — a plain object here would be
+    // {min: 0, max: 0} for the whole of the first drag.
+    bounds: () =>
+      dismissDirection === 1
+        ? { min: 0, max: extent.current }
+        : { min: -extent.current, max: 0 },
+    dimension: () => extent.current,
     onDragStart: () => {
       directionRef.current = resolveDirection(panelRef.current);
       measure();
@@ -148,40 +166,73 @@ export function Sheet({
       // to its own layer and exhausts memory on exactly the devices we protect.
       if (panelRef.current) panelRef.current.style.willChange = 'transform';
     },
-    onDrag: ({ offset }) => paint(offset),
-    onDragEnd: ({ offset, velocity }) => {
-      const extent = size.current || measure();
+    onDrag: ({ offset: dragged }) => offset.jump(dragged),
+    onDragEnd: ({ offset: released, velocity }) => {
+      const size = extent.current || measure();
       if (panelRef.current) panelRef.current.style.willChange = '';
 
       // Dismiss-positive scalars, so the decision reads the same on every edge.
-      const displacement = offset * dismissDirection;
+      const displacement = released * dismissDirection;
       const dismissVelocity = velocity * dismissDirection;
 
       // The landing point comes from where the gesture was *going*, not where it stopped.
-      const projectedTarget = resolveSnapTarget(displacement, dismissVelocity, [0, extent]);
+      const projected = resolveSnapTarget(displacement, dismissVelocity, [0, size]);
       const commit =
-        shouldCommit(displacement, dismissVelocity, extent * DISMISS_FRACTION) ||
-        projectedTarget === extent;
+        shouldCommit(displacement, dismissVelocity, size * DISMISS_FRACTION) ||
+        projected === size;
 
-      const target = (commit ? extent : 0) * dismissDirection;
+      const resulting = !commit;
+      // Record before notifying, so the controlled-prop effect below recognises this
+      // change as one the gesture already animated and does not re-settle it with a
+      // zero-velocity spring.
+      settledOpen.current = resulting;
+
       // Raw release velocity, not the projection — projection picks the destination,
       // velocity handoff removes the seam. Both, or you get half the feel.
-      settle(target, velocity, true);
+      settle((commit ? size : 0) * dismissDirection, velocity, true);
 
-      if (commit !== !open) return;
-      onOpenChange(!commit);
+      if (resulting !== open) onOpenChange(resulting);
     },
   });
 
-  // React to controlled `open` changes that did not come from a gesture.
+  // Position the sheet once it has been laid out, without animating: before this runs the
+  // CSS class holds the resting transform, which is what SSR needs.
   useEffect(() => {
     const panel = panelRef.current;
     if (!panel) return;
     directionRef.current = resolveDirection(panel);
-    const extent = measure();
-    if (isDragging) return;
-    settle(open ? 0 : extent * dismissDirection, 0, false);
-  }, [open, isDragging, measure, settle, dismissDirection]);
+    const size = measure();
+    if (!measured.current) return;
+
+    if (settledOpen.current === null) {
+      settledOpen.current = open;
+      offset.jump(open ? 0 : size * dismissDirection);
+    }
+
+    const unsubscribe = offset.on('change', paint);
+    paint(offset.get());
+    return unsubscribe;
+  }, [measure, offset, paint, open, dismissDirection]);
+
+  // React to controlled `open` changes that did not come from a gesture.
+  useEffect(() => {
+    if (!measured.current || isDragging) return;
+    if (settledOpen.current === open) return;
+    settledOpen.current = open;
+    settle(open ? 0 : extent.current * dismissDirection, 0, false);
+  }, [open, isDragging, settle, dismissDirection]);
+
+  // A px offset goes stale when the viewport changes. Re-measure and re-seat a closed
+  // sheet, or it drifts partly on-screen after a rotation.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => {
+      const size = measure();
+      if (!isDragging && !open && measured.current) offset.jump(size * dismissDirection);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [measure, isDragging, open, offset, dismissDirection]);
 
   return (
     <>
