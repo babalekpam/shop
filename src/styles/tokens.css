@@ -1,0 +1,286 @@
+/*
+ * ARGILETTE.shop — design tokens
+ * See docs/design-system.md. Values here are deliberate; change them there first.
+ *
+ * This file is delivered as a nonce'd first-party stylesheet. It is also where every
+ * animatable surface's *resting* state must live, because our CSP runs `style-src`
+ * without `unsafe-inline` and a server-rendered `style` attribute is blocked outright.
+ * Runtime values arrive as custom properties set through CSSOM. (Design system §1.2.)
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Spacing -------------------------------------------------------------
+   * rem throughout, never px: layout must scale with the user's text size and
+   * survive locales whose strings run 40% longer than English. (Skill §15.) */
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-sheet: 1.75rem;
+  --radius-full: 9999px;
+
+  /* ---- Colour --------------------------------------------------------------
+   * Light palette defined on bare :root so it is never conditional. Dark
+   * redefines only what changes. */
+  --bg: #fbfbfd;
+  --bg-elevated: #ffffff;
+  --bg-sunken: #f2f2f5;
+
+  --fg: #1c1c1e;
+  --fg-secondary: #48484a;
+  --fg-tertiary: #8e8e93;
+
+  --accent: #0a5cff;
+  --accent-fg: #ffffff;
+  --accent-quiet: rgba(10, 92, 255, 0.1);
+
+  --success: #1a7f37;
+  --warning: #9a6700;
+  --danger: #cf222e;
+
+  --separator: rgba(60, 60, 67, 0.12);
+  --border-strong: rgba(60, 60, 67, 0.29);
+
+  /* ---- Material ------------------------------------------------------------
+   * Blur radii are *discrete values*, stepped on commit, never interpolated —
+   * animating the radius re-runs the backdrop readback every frame and drops
+   * mid-range Android below 60fps. (Design system §1.3.) */
+  --material-blur-none: 0px;
+  --material-blur-thin: 12px;
+  --material-blur-regular: 20px;
+  --material-blur-thick: 24px; /* hard cap — past this the cost climbs, the look does not */
+
+  --material-saturate: 180%;
+
+  --material-thin-bg: rgba(255, 255, 255, 0.55);
+  --material-regular-bg: rgba(255, 255, 255, 0.68);
+  --material-thick-bg: rgba(250, 250, 252, 0.8);
+
+  /* Bright top edge — light catching the material. (Skill §12.) */
+  --material-edge: rgba(255, 255, 255, 0.5);
+
+  /* Bigger surfaces read thicker: deeper shadow as well as stronger blur. */
+  --shadow-chip: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.07), 0 8px 24px rgba(0, 0, 0, 0.09);
+  --shadow-sheet: 0 -1px 3px rgba(0, 0, 0, 0.05), 0 -12px 48px rgba(0, 0, 0, 0.16);
+
+  --scrim: rgba(0, 0, 0, 0.32);
+
+  /* ---- Motion --------------------------------------------------------------
+   * Apple's damping/response pairs. The authoritative mapping to Motion's
+   * bounce/duration API lives in src/lib/motion/spring.ts — these mirror it for
+   * the CSS-only cases (non-interactive decoration, reduced-motion cross-fades).
+   * Anything a pointer can touch uses a spring, not a transition. (Skill §3.) */
+  --response-snappy: 0.25s;
+  --response-ui: 0.35s;
+  --response-reposition: 0.4s;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.64, 0, 0.78, 0); /* inverse of --ease-out, for the return path */
+
+  --press-scale: 0.97;
+  --duration-press: 100ms;
+  --duration-crossfade: 200ms;
+
+  /* Live gesture values, written from CSSOM. Fallbacks are the resting state. */
+  --sheet-offset: 100%;
+  --sheet-progress: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #000000;
+    --bg-elevated: #1c1c1e;
+    --bg-sunken: #0a0a0b;
+
+    --fg: #f5f5f7;
+    --fg-secondary: #aeaeb2;
+    --fg-tertiary: #8e8e93;
+
+    --accent: #4d8dff;
+    --accent-fg: #05122e;
+    --accent-quiet: rgba(77, 141, 255, 0.16);
+
+    --success: #3fb950;
+    --warning: #d29922;
+    --danger: #ff7b72;
+
+    --separator: rgba(235, 235, 245, 0.14);
+    --border-strong: rgba(235, 235, 245, 0.3);
+
+    --material-thin-bg: rgba(28, 28, 30, 0.6);
+    --material-regular-bg: rgba(28, 28, 30, 0.72);
+    --material-thick-bg: rgba(20, 20, 22, 0.82);
+    --material-edge: rgba(255, 255, 255, 0.12);
+
+    --scrim: rgba(0, 0, 0, 0.5);
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #000000;
+  --bg-elevated: #1c1c1e;
+  --bg-sunken: #0a0a0b;
+
+  --fg: #f5f5f7;
+  --fg-secondary: #aeaeb2;
+  --fg-tertiary: #8e8e93;
+
+  --accent: #4d8dff;
+  --accent-fg: #05122e;
+  --accent-quiet: rgba(77, 141, 255, 0.16);
+
+  --success: #3fb950;
+  --warning: #d29922;
+  --danger: #ff7b72;
+
+  --separator: rgba(235, 235, 245, 0.14);
+  --border-strong: rgba(235, 235, 245, 0.3);
+
+  --material-thin-bg: rgba(28, 28, 30, 0.6);
+  --material-regular-bg: rgba(28, 28, 30, 0.72);
+  --material-thick-bg: rgba(20, 20, 22, 0.82);
+  --material-edge: rgba(255, 255, 255, 0.12);
+
+  --scrim: rgba(0, 0, 0, 0.5);
+}
+
+/* Theme changes are eased, never cut — an abrupt full-page brightness jump is a
+ * documented accessibility trigger. (Skill §14.) */
+html {
+  transition: background-color var(--duration-crossfade) var(--ease-out);
+}
+
+/* ---- Material classes -----------------------------------------------------
+ * Never stack two light translucent surfaces; if a popover must open over a
+ * sheet, the popover is solid. (Skill §12.) */
+
+.material-thin,
+.material-regular,
+.material-thick {
+  -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+  backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+  border-color: var(--material-edge);
+}
+
+.material-thin {
+  --material-blur: var(--material-blur-thin);
+  background: var(--material-thin-bg);
+  box-shadow: var(--shadow-chip);
+}
+
+.material-regular {
+  --material-blur: var(--material-blur-regular);
+  background: var(--material-regular-bg);
+  box-shadow: var(--shadow-raised);
+}
+
+.material-thick {
+  --material-blur: var(--material-blur-thick);
+  background: var(--material-thick-bg);
+  box-shadow: var(--shadow-sheet);
+}
+
+/* Vibrancy: text on material gets more contrast, a step more weight, and a
+ * small positive tracking bump. Never flat mid-gray on glass. (Skill §12.) */
+.on-material {
+  color: var(--fg);
+  font-weight: 500;
+  letter-spacing: 0.006em;
+}
+
+.on-material-secondary {
+  color: var(--fg-secondary);
+  font-weight: 500;
+  letter-spacing: 0.008em;
+}
+
+/* Scroll edge effect — a short gradient where content passes under floating
+ * chrome, applied only when content is actually beneath it. Not a 1px divider. */
+.scroll-edge {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--space-lg));
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--space-lg));
+}
+
+/* ---- Accessibility --------------------------------------------------------
+ * Three independent signals, honoured at the token layer so components get
+ * them without opting in. (Skill §14, design system §5.) */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --press-scale: 1;
+    --duration-press: 0ms;
+  }
+
+  /* Reduced motion is not reduced feedback: opacity and colour changes that
+   * carry meaning survive. Movement and overshoot do not. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .sheet,
+  .drawer,
+  .popover {
+    transition: opacity var(--duration-crossfade) var(--ease-out) !important;
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --material-blur-thin: 0px;
+    --material-blur-regular: 0px;
+    --material-blur-thick: 0px;
+    --material-thin-bg: var(--bg-elevated);
+    --material-regular-bg: var(--bg-elevated);
+    --material-thick-bg: var(--bg-elevated);
+  }
+
+  /* Hierarchy falls back to the shadow scale, which is still intact. */
+  .material-thin,
+  .material-regular,
+  .material-thick {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .on-material,
+  .on-material-secondary {
+    letter-spacing: 0;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --separator: currentColor;
+    --material-thin-bg: var(--bg-elevated);
+    --material-regular-bg: var(--bg-elevated);
+    --material-thick-bg: var(--bg-elevated);
+    --fg-secondary: var(--fg);
+    --fg-tertiary: var(--fg);
+  }
+
+  .material-thin,
+  .material-regular,
+  .material-thick {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--border-strong);
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "argilette-shop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ARGILETTE.shop — storefront and entitlement backbone",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "comments": {
+    "pinning": "Exact versions, no ranges, lockfile committed — security spec §11. A checkout path is not the place for a floating dependency."
+  },
+  "dependencies": {
+    "motion": "13.1.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}

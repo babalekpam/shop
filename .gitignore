@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+
+# Secrets never enter the repository — security spec §9.
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store

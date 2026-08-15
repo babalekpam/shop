@@ -1,0 +1,14 @@
+/*
+ * Single entry point for the design system's styles.
+ *
+ * Import order matters: tokens define the custom properties that typography and
+ * components consume, and the accessibility overrides in tokens.css must be able to
+ * reach the component rules that follow.
+ *
+ * Delivered as a first-party, nonce'd stylesheet. Never a CDN — that is a CSP and
+ * supply-chain requirement (security spec §5, §11), not a performance preference.
+ */
+
+@import './tokens.css';
+@import './typography.css';
+@import './components.css';

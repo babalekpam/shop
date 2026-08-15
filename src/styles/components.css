@@ -1,0 +1,306 @@
+/*
+ * ARGILETTE.shop — component surfaces
+ *
+ * Every animatable surface's *resting* state lives here, not in a `style` attribute.
+ * Our CSP runs `style-src` without `unsafe-inline`, so a server-rendered inline style is
+ * blocked and the element renders unstyled — a sheet that should start off-screen would
+ * sit on top of the page until hydration. Runtime values arrive through CSSOM.
+ * (Design system §1.2.)
+ *
+ * Logical properties only. `left`/`right` in this file is a bug: Arabic is a launch
+ * locale, and a physical property is a silent RTL break. (Design system §1.1.)
+ */
+
+/* ---- Button --------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding-block: var(--space-sm);
+  padding-inline: var(--space-lg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.004em;
+  cursor: pointer;
+  user-select: none;
+  /* Removes the ~300ms tap delay and stops a press from being stolen by a pan gesture. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* The one place a CSS transition is right: nothing here is gesture-driven, so there is
+   * nothing to grab and reverse mid-flight. (Skill §3.) */
+  transition:
+    transform var(--duration-press) var(--ease-out),
+    background-color var(--duration-press) var(--ease-out),
+    opacity var(--duration-press) var(--ease-out);
+}
+
+/* Feedback lands on pointer-down, in the same frame as the event. */
+.btn[data-pressed] {
+  transform: scale(var(--press-scale));
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.btn-secondary {
+  background: var(--accent-quiet);
+  color: var(--accent);
+}
+
+.btn-plain {
+  background: transparent;
+  color: var(--accent);
+  padding-inline: var(--space-sm);
+}
+
+.btn-destructive {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* ---- Sheet ---------------------------------------------------------------- */
+
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.sheet-scrim[data-open] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: contain;
+  border: 1px solid var(--material-edge);
+}
+
+/* Resting (closed) transforms. These must be correct before hydration, which is exactly
+ * why they are here and not on the element. */
+.sheet[data-edge='block-end'] {
+  inset-inline: 0;
+  inset-block-end: 0;
+  max-block-size: 92vh;
+  border-start-start-radius: var(--radius-sheet);
+  border-start-end-radius: var(--radius-sheet);
+  transform: translateY(100%);
+}
+
+.sheet[data-edge='block-start'] {
+  inset-inline: 0;
+  inset-block-start: 0;
+  max-block-size: 92vh;
+  border-end-start-radius: var(--radius-sheet);
+  border-end-end-radius: var(--radius-sheet);
+  transform: translateY(-100%);
+}
+
+/* Anchored to the inline edge, so the drawer arrives from the right in English and from
+ * the left in Arabic — same code, correct in both. */
+.sheet[data-edge='inline-end'] {
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: min(28rem, 100vw);
+  border-start-start-radius: var(--radius-sheet);
+  border-end-start-radius: var(--radius-sheet);
+  transform: translateX(100%);
+}
+
+.sheet[data-edge='inline-start'] {
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: min(28rem, 100vw);
+  border-start-end-radius: var(--radius-sheet);
+  border-end-end-radius: var(--radius-sheet);
+  transform: translateX(-100%);
+}
+
+/* RTL mirrors the inline-anchored resting transforms. The component's logical→physical
+ * conversion handles the runtime values; this handles the pre-hydration ones. */
+[dir='rtl'] .sheet[data-edge='inline-end'] {
+  transform: translateX(-100%);
+}
+
+[dir='rtl'] .sheet[data-edge='inline-start'] {
+  transform: translateX(100%);
+}
+
+.sheet[data-open] {
+  transform: none;
+}
+
+.sheet-handle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--space-sm);
+  cursor: grab;
+  /* The handle owns the drag; the body keeps its own scrolling. */
+  touch-action: none;
+}
+
+.sheet-handle:active {
+  cursor: grabbing;
+}
+
+.sheet-grabber {
+  inline-size: 2.25rem;
+  block-size: 0.3125rem;
+  border-radius: var(--radius-full);
+  background: var(--fg-tertiary);
+  opacity: 0.5;
+}
+
+/* ---- Toolbar -------------------------------------------------------------- */
+
+.toolbar-sentinel {
+  block-size: 1px;
+}
+
+.toolbar {
+  position: sticky;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding-block: var(--space-sm);
+  padding-inline: var(--space-lg);
+  border: 0;
+  border-block-end: 1px solid transparent;
+}
+
+.toolbar[data-edge='block-start'] {
+  inset-block-start: 0;
+}
+
+.toolbar[data-edge='block-end'] {
+  inset-block-end: 0;
+  border-block-end: 0;
+  border-block-start: 1px solid var(--material-edge);
+}
+
+/* The edge effect appears only while content is genuinely underneath. */
+.toolbar[data-overlapping] {
+  --toolbar-edge-mask: linear-gradient(to bottom, #000 calc(100% - var(--space-md)), transparent);
+  -webkit-mask-image: var(--toolbar-edge-mask);
+  mask-image: var(--toolbar-edge-mask);
+}
+
+/* ---- Price ---------------------------------------------------------------- */
+
+.price {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.price-amount {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3xs);
+  /* Cross-fade, never a roll or slide — sliding digits imply the value is still moving. */
+  animation: price-crossfade var(--duration-crossfade) var(--ease-out);
+}
+
+@keyframes price-crossfade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.price-interval {
+  color: var(--fg-secondary);
+  font-weight: var(--weight-regular);
+}
+
+.price-lock {
+  color: var(--fg-secondary);
+}
+
+/* ---- Payment status ------------------------------------------------------- */
+
+.payment-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  align-items: flex-start;
+  padding: var(--space-xl);
+}
+
+.payment-status-title {
+  margin: 0;
+}
+
+.payment-status-detail,
+.payment-status-leave,
+.payment-status-elapsed {
+  margin: 0;
+  color: var(--fg-secondary);
+}
+
+.payment-steps {
+  display: flex;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  inline-size: 100%;
+}
+
+.payment-step {
+  block-size: 0.25rem;
+  flex: 1;
+  border-radius: var(--radius-full);
+  background: var(--separator);
+  /* Colour only. No looping animation anywhere in this component — a "waiting" pulse
+   * lands near 0.2 Hz, which skill §14 flags as a vestibular trigger, and this screen can
+   * be on display for minutes. (Design system §1.4.) */
+  transition: background-color var(--response-ui) var(--ease-out);
+}
+
+.payment-step[data-state='done'] {
+  background: var(--success);
+}
+
+.payment-step[data-state='active'] {
+  background: var(--accent);
+}
+
+.payment-step[data-state='failed'] {
+  background: var(--danger);
+}
+
+/* ---- Focus ---------------------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

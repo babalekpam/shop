@@ -1,0 +1,150 @@
+/*
+ * ARGILETTE.shop — type scale
+ * See docs/design-system.md §4.
+ *
+ * Two rules do most of the work here:
+ *   1. Tracking is size-specific. Negative as text grows, slightly positive as it
+ *      shrinks. A single letter-spacing value is wrong somewhere. (Skill §15.)
+ *   2. Leading tracks size inversely, and changes again per script — Arabic and
+ *      diacritic-heavy Latin need more room than English.
+ */
+
+:root {
+  /* System font first: it already ships optical sizing, tracking tables and
+   * legibility tuning. The self-hosted fallback exists solely because Android
+   * system coverage for Yoruba and Ewe diacritics (ẹ ọ ɖ ƒ ŋ) is inconsistent,
+   * and a missing glyph renders as tofu rather than degrading. Self-hosted and
+   * subsetted, never a font CDN — that is a CSP and supply-chain requirement.
+   * (Design system §4.1, security spec §5 and §11.) */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'ARGILETTE Latin Extended', 'Noto Sans', sans-serif;
+  --font-arabic: system-ui, 'SF Arabic', 'Noto Naskh Arabic', 'Geeza Pro', serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 100%; /* respect the user's text-size setting — never a px root */
+  -webkit-text-size-adjust: 100%;
+  font-synthesis-weight: none;
+}
+
+body {
+  color: var(--fg);
+  background: var(--bg);
+  font-size: 1rem;
+  line-height: 1.55;
+  letter-spacing: 0;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- Scale ---------------------------------------------------------------
+ * Hierarchy is built from weight + size + leading as a set, never size alone. */
+
+.type-display {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.022em;
+  font-weight: var(--weight-bold);
+}
+
+.type-title-1 {
+  font-size: 2rem;
+  line-height: 1.15;
+  letter-spacing: -0.018em;
+  font-weight: var(--weight-bold);
+}
+
+.type-title-2 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  font-weight: var(--weight-semibold);
+}
+
+.type-title-3 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  letter-spacing: -0.006em;
+  font-weight: var(--weight-semibold);
+}
+
+.type-body {
+  font-size: 1rem;
+  line-height: 1.55;
+  letter-spacing: 0;
+  font-weight: var(--weight-regular);
+}
+
+.type-callout {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  letter-spacing: 0.004em;
+  font-weight: var(--weight-regular);
+}
+
+.type-caption {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  font-weight: var(--weight-regular);
+  color: var(--fg-secondary);
+}
+
+/* ---- Money ---------------------------------------------------------------
+ * Tabular figures so a price does not jitter horizontally when quantity or
+ * currency changes. That jitter reads as instability on the one number the
+ * customer cares most about. Formatting itself goes through
+ * src/lib/format/money.ts — never a literal exponent. (Design system §4.3.) */
+.type-money {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ---- Per-script adjustments ----------------------------------------------
+ * Applied by language attribute, not by a component prop, so a translated
+ * string cannot arrive without them. (Design system §4.3.) */
+
+:lang(ar) {
+  font-family: var(--font-arabic);
+  line-height: 1.7;
+  /* Letter-spacing breaks Arabic cursive joins outright. Zeroed at every size,
+   * overriding the scale above. */
+  letter-spacing: 0 !important;
+}
+
+:lang(ar) .type-display,
+:lang(ar) .type-title-1 {
+  line-height: 1.3;
+}
+
+:lang(ar) .type-title-2,
+:lang(ar) .type-title-3 {
+  line-height: 1.4;
+}
+
+/* Yoruba and Ewe stack marks above and below the line (ẹ̀ ọ́ ɖ ƒ ŋ). They need
+ * more leading, not more tracking — tight leading collides the marks with the
+ * neighbouring line. */
+:lang(yo),
+:lang(ee) {
+  line-height: 1.7;
+}
+
+:lang(yo) .type-display,
+:lang(ee) .type-display {
+  line-height: 1.2;
+}
+
+:lang(yo) .type-title-1,
+:lang(ee) .type-title-1,
+:lang(yo) .type-title-2,
+:lang(ee) .type-title-2 {
+  line-height: 1.35;
+}
