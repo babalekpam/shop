@@ -680,3 +680,70 @@ a {
     padding-block: var(--space-2xl) var(--space-lg);
   }
 }
+
+/* ---- Legal documents ------------------------------------------------------ */
+
+.legal {
+  /* A reading measure, centred. Long-form legal prose set to the full 72rem container
+   * is genuinely harder to read — the eye loses the line on the return sweep. */
+  max-inline-size: 44rem;
+  margin-inline: auto;
+}
+
+.legal-head h1 {
+  margin-block: 0 var(--space-sm);
+}
+
+.legal-head p {
+  margin-block: 0 var(--space-xs);
+}
+
+.legal-lede {
+  color: var(--fg-secondary);
+}
+
+/* Draft status, stated where it cannot be missed. Amber rather than red: this is a
+ * warning about completeness, not an error. */
+.legal-notice {
+  margin-block: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border-inline-start: 3px solid var(--hue-amber-vivid);
+  border-radius: var(--radius-md);
+  background: var(--hue-amber-wash);
+}
+
+.legal-notice p {
+  margin: 0;
+}
+
+.legal-notice-quiet {
+  border-inline-start-color: var(--separator);
+  background: var(--bg-sunken);
+  color: var(--fg-secondary);
+}
+
+.legal-section {
+  margin-block-start: var(--space-xl);
+}
+
+.legal-section h2 {
+  margin-block: 0 var(--space-sm);
+}
+
+.legal-section p {
+  margin-block: 0 var(--space-md);
+  /* Legal prose is read, not scanned. A slightly looser measure and leading than the
+   * catalog copy, which is scanned rather than read. */
+  line-height: 1.65;
+}
+
+/* An unfilled placeholder must be impossible to mistake for prose — the whole point is
+ * that the site cannot quietly go live with them in. */
+.legal-placeholder {
+  background: var(--hue-amber-wash);
+  color: var(--hue-amber-ink);
+  border-block-end: 2px dotted var(--hue-amber-vivid);
+  padding-inline: 0.2em;
+  border-radius: 2px;
+  font-style: italic;
+}

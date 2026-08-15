@@ -72,5 +72,11 @@
       "name": "Ingeniería",
       "blurb": "Páginas de destino, sprints de MVP, integraciones de pago e iguales — precio fijo, fecha fija."
     }
+  },
+  "legal": {
+    "updated": "Última actualización: {date}",
+    "draftNotice": "Este documento es un borrador basado en el funcionamiento real de la plataforma. Aún no ha sido revisado por asesoría jurídica y todavía no es vinculante.",
+    "englishFallback": "Este documento se publica solo en inglés y francés. Está leyendo la versión en inglés.",
+    "placeholder": "Pendiente de completar antes del lanzamiento"
   }
 }

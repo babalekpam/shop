@@ -107,5 +107,11 @@
     "loading": "Loading",
     "close": "Close",
     "back": "Back"
+  },
+  "legal": {
+    "updated": "Last updated {date}",
+    "draftNotice": "This document is a draft prepared from how the platform actually works. It has not yet been reviewed by legal counsel and is not yet binding. Highlighted text marks details still to be filled in.",
+    "englishFallback": "This document is published in English and French only. You are reading the English version.",
+    "placeholder": "To be completed before launch"
   }
 }

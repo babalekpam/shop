@@ -14,6 +14,22 @@ export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
 }
 
+/**
+ * Every page under this layout renders per request, because the CSP carries a
+ * per-request nonce (see `src/lib/security/csp.ts`) and a nonce cannot be baked into a
+ * prerendered page.
+ *
+ * This has to be declared, not inferred. Most pages here read `headers()` for the
+ * visitor's country, which opts them into dynamic rendering as a side effect — so the
+ * coupling held by accident until a page arrived that had no reason to read headers.
+ * The legal pages were exactly that: they prerendered, shipped without the nonce, and
+ * every one of their scripts was blocked. The page rendered as unstyled-but-readable
+ * HTML with no JavaScript at all, and nothing in the build output said so.
+ *
+ * Declaring it here means adding a page can never silently reintroduce that.
+ */
+export const dynamic = 'force-dynamic';
+
 export const viewport: Viewport = {
   // The brand navy and the light surface, so the browser chrome matches the page rather
   // than flashing white behind a dark header on mobile.

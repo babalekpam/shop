@@ -72,5 +72,11 @@
       "name": "Engenharia",
       "blurb": "Páginas de destino, sprints de MVP, integrações de pagamento e avenças — preço fixo, data fixa."
     }
+  },
+  "legal": {
+    "updated": "Última atualização em {date}",
+    "draftNotice": "Este documento é um rascunho baseado no funcionamento real da plataforma. Ainda não foi revisto por assessoria jurídica e ainda não é vinculativo.",
+    "englishFallback": "Este documento é publicado apenas em inglês e francês. Está a ler a versão em inglês.",
+    "placeholder": "A completar antes do lançamento"
   }
 }

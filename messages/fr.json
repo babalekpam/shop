@@ -107,5 +107,11 @@
     "loading": "Chargement",
     "close": "Fermer",
     "back": "Retour"
+  },
+  "legal": {
+    "updated": "Dernière mise à jour le {date}",
+    "draftNotice": "Ce document est un projet rédigé à partir du fonctionnement réel de la plateforme. Il n'a pas encore été revu par un conseil juridique et n'est pas encore contraignant. Le texte surligné signale les éléments restant à compléter.",
+    "englishFallback": "Ce document n'est publié qu'en anglais et en français. Vous lisez la version française.",
+    "placeholder": "À compléter avant le lancement"
   }
 }

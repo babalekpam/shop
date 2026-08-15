@@ -8,7 +8,7 @@ exponent-aware multi-currency · Apple fluid-interface design system.
 ```bash
 npm install
 npm run dev        # http://localhost:3000 → redirects to your locale
-npm run verify     # typecheck + 69 tests + production build
+npm run verify     # typecheck + 79 tests + production build
 ```
 
 The app **runs with no credentials at all**. The catalog, all ten locales, the cart, the price
@@ -21,7 +21,7 @@ are present — deliberately, so a half-configured deployment can never look lik
 
 | Area | State |
 |---|---|
-| Design system (motion, materials, type, a11y) | Built, 69 tests, documented in `docs/design-system.md` |
+| Design system (motion, materials, type, a11y) | Built, tested, documented in `docs/design-system.md` |
 | Brand (mark, lockup, favicon, palette) | Built from the supplied artwork as scalable geometry |
 | 10 locales, RTL Arabic, per-key `en` fallback | Built and verified against a running server |
 | Locale routing from `CF-IPCountry` + cookie override | Built and verified (`TG` → `fr`) |
@@ -32,6 +32,7 @@ are present — deliberately, so a half-configured deployment can never look lik
 | Mobile-money waiting state | Built (`PaymentStatus`) |
 | Strict CSP with per-request nonce, no `unsafe-inline` | Built, asserted in tests |
 | `GET /api/v1/health` | Built |
+| Terms, Privacy and Refunds pages | **Drafted, not reviewed** — see below |
 
 ## What is NOT built
 
@@ -47,7 +48,6 @@ handle money and access.
 | **Entitlement API** `/api/v1/entitlements` — the actual point of the product | DB + tokens | Sprint 5 |
 | **FX engine** — daily snapshot, rounding rules, 48h staleness freeze | FX provider key | Sprint 2 |
 | **Licence keys, download grants, signed URLs** | DB | Sprint 3/5 |
-| Legal pages (`/legal/*`) are linked but not written | Counsel | — |
 | Clinical-terminology review for the ten locales | Named reviewers | Sprint 6 |
 
 **Do not let anything grant access until the webhook handlers exist.** `POST /api/checkout/session`
@@ -86,6 +86,16 @@ curl -sI https://<host>/ -H 'CF-IPCountry: TG'   # expect 307 → /fr
 ---
 
 ## Two decisions worth knowing about before you change anything
+
+**The legal pages are drafts and are not binding.** `/legal/terms`, `/legal/privacy` and
+`/legal/refunds` are written from what the platform actually does — Paddle is merchant of record,
+card data never reaches us, downloads expire in fifteen minutes, dunning runs twenty-one days, no
+patient data exists anywhere. That makes them a useful starting point for a lawyer rather than a
+finished document. Facts only ARGILETTE knows are `[[placeholders]]`, rendered highlighted on the
+page so the site cannot quietly go live with them unfilled, and while `reviewPending` is true each
+page shows a draft banner and is `noindex`. A test asserts a document cannot be marked reviewed
+while placeholders remain. Security spec §2 and §15 already require counsel sign-off before launch;
+this does not replace it.
 
 **The CSP nonce makes pages render per request.** Next's bootstrap scripts are inline, so a
 no-`unsafe-inline` policy needs a per-request nonce, and a per-request nonce cannot be baked into a
