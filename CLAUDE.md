@@ -10,6 +10,7 @@ Next.js 16 (App Router) · TypeScript strict · Drizzle/Postgres · Keycloak · 
 | [`docs/specs/argilette-shop-build-spec.md`](docs/specs/argilette-shop-build-spec.md) | Architecture, currency model, data model, routes, milestones |
 | [`docs/specs/argilette-shop-security-spec.md`](docs/specs/argilette-shop-security-spec.md) | The PHI boundary, PCI scope, entitlement hardening |
 | [`docs/specs/argilette-shop-catalog.md`](docs/specs/argilette-shop-catalog.md) | Products, tiers, pricing |
+| [`docs/specs/argilette-agency-spec.md`](docs/specs/argilette-agency-spec.md) | **Planning draft** — the autonomous growth team. Nothing built. |
 | [`docs/design-system.md`](docs/design-system.md) | **How the interface behaves** — Apple fluid-interface craft resolved against our constraints |
 | [`.claude/skills/apple-design/SKILL.md`](.claude/skills/apple-design/SKILL.md) | Upstream design source of truth |
 
