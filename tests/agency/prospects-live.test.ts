@@ -59,15 +59,21 @@ describe.skipIf(!present)('Togo private-health list', () => {
 
   it('puts the renewal window at the top of the call queue', () => {
     const queue = buildCallQueue(rows, 15);
-    process.stdout.write('\n  top of the call queue:\n');
-    for (const entry of queue) {
-      const flag = entry.personalMobile ? ' [personal mobile]' : '';
-      const days = entry.daysToExpiry === null ? '   ?' : String(entry.daysToExpiry).padStart(5);
-      process.stdout.write(
-        `    ${days}d  ${entry.tier}  ${entry.name.slice(0, 34).padEnd(34)} ${entry.phone}${flag}\n`,
-      );
-    }
-    process.stdout.write('\n');
+
+    // Shape only — no names, no numbers.
+    //
+    // `data/` is gitignored because this data cannot be rotated and the people in it did
+    // not choose to be there. Printing it here would defeat that entirely: terminal
+    // scrollback gets pasted into chats, and CI logs are retained for months and readable
+    // by anyone with repository access. The test's job is to prove the queue orders
+    // correctly against the real file, and it can do that without naming a single clinic.
+    let personalMobiles = 0;
+    for (const entry of queue) if (entry.personalMobile) personalMobiles++;
+    process.stdout.write(
+      `\n  call queue: ${queue.length} entries, ` +
+        `${personalMobiles} on a personal mobile (human call only)\n` +
+        `  most overdue licence: ${queue[0]?.daysToExpiry ?? '?'} days\n\n`,
+    );
 
     // Expired licences first — they are operating without a valid one and know it.
     expect(queue[0]?.daysToExpiry).toBeLessThan(0);

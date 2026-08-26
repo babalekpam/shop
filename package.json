@@ -2,7 +2,7 @@
   "name": "argilette-shop",
   "version": "0.1.0",
   "private": true,
-  "description": "ARGILETTE.shop \u2014 storefront and entitlement backbone",
+  "description": "ARGILETTE.shop — storefront and entitlement backbone",
   "type": "module",
   "scripts": {
     "dev": "next dev",
@@ -16,12 +16,14 @@
     "agency:prospects": "vitest run tests/agency/prospects-live.test.ts"
   },
   "comments": {
-    "pinning": "Exact versions, no ranges, lockfile committed \u2014 security spec \u00a711. A checkout path is not the place for a floating dependency."
+    "pinning": "Exact versions, no ranges, lockfile committed — security spec §11. A checkout path is not the place for a floating dependency."
   },
   "dependencies": {
+    "drizzle-orm": "0.45.2",
     "motion": "13.1.0",
     "next": "16.3.1",
     "next-intl": "4.13.6",
+    "pg": "8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
@@ -29,6 +31,7 @@
     "@testing-library/dom": "10.4.1",
     "@testing-library/react": "16.3.2",
     "@types/node": "22.20.1",
+    "@types/pg": "8.23.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "jsdom": "30.0.1",

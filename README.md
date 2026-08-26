@@ -8,7 +8,7 @@ exponent-aware multi-currency · Apple fluid-interface design system.
 ```bash
 npm install
 npm run dev        # http://localhost:3000 → redirects to your locale
-npm run verify     # typecheck + 79 tests + production build
+npm run verify     # typecheck + 307 tests + production build
 ```
 
 The app **runs with no credentials at all**. The catalog, all ten locales, the cart, the price
@@ -32,6 +32,11 @@ are present — deliberately, so a half-configured deployment can never look lik
 | Mobile-money waiting state | Built (`PaymentStatus`) |
 | Strict CSP with per-request nonce, no `unsafe-inline` | Built, asserted in tests |
 | `GET /api/v1/health` | Built |
+| **Database schema + migration** (build spec §6) | Built, constraints verified against real Postgres |
+| **Paddle + CinetPay webhooks**, idempotent on `gateway_event_id` | Built, verified under concurrent duplicate delivery |
+| **CinetPay server-side re-verification** before any grant | Built |
+| **Entitlement API** `/api/v1/entitlements`, signed, per-product tokens | Built |
+| **Licence keys and signed download URLs** | Built |
 | Terms, Privacy and Refunds pages | **Drafted, not reviewed** — see below |
 
 ## What is NOT built
@@ -41,19 +46,20 @@ handle money and access.
 
 | Missing | Needs | Spec |
 |---|---|---|
-| **Paddle checkout + webhooks** | Real credentials, then implementation | Sprint 3 |
-| **CinetPay mobile money + server-side re-verification** | Real credentials, then implementation | Sprint 4 |
-| **Database** — no Drizzle schema, no migrations. The catalog is a typed seed file. | Neon URL | Sprint 1 |
 | **Keycloak auth** — no `/account`, no admin, no route protection | Keycloak client | Sprint 1 |
-| **Entitlement API** `/api/v1/entitlements` — the actual point of the product | DB + tokens | Sprint 5 |
+| **Paddle checkout session creation** — the webhook side is built; creating the overlay session is not | Paddle credentials | Sprint 3 |
 | **FX engine** — daily snapshot, rounding rules, 48h staleness freeze | FX provider key | Sprint 2 |
-| **Licence keys, download grants, signed URLs** | DB | Sprint 3/5 |
+| **Admin** — dead-letter replay UI (the query exists, the screen does not) | Keycloak roles | Sprint 5 |
+| **mTLS** between entitlement API and consuming products | Deployment topology | Security §7 |
 | Clinical-terminology review for the ten locales | Named reviewers | Sprint 6 |
 
-**Do not let anything grant access until the webhook handlers exist.** `POST /api/checkout/session`
-currently validates the cart against the server-side catalog and returns `501`. It never returns
-anything a client could read as a completed purchase. That is the shape the real implementation
-must keep: build spec §9 — *never grant access from a redirect, only from a verified webhook.*
+The money-and-access path is now built and tested. What is left is authentication, the
+outbound half of Paddle checkout, and operational surfaces.
+
+**Access is granted in exactly one place.** `src/lib/commerce/fulfil.ts`, called only from a
+verified webhook inside the transaction that records the event. `POST /api/checkout/session` still
+returns `501` and never returns anything a client could read as a completed purchase — build spec
+§9, *never grant access from a redirect, only from a verified webhook.*
 
 ---
 
@@ -147,3 +153,49 @@ Full rationale in `CLAUDE.md` and `docs/design-system.md`. The ones with teeth:
    renders unstyled. Asserted in the test suite.
 6. **Money renders through `src/lib/format/money.ts`.** XOF has no decimals, KWD has three; a
    hardcoded `/100` produces invoices wrong by 1000×.
+
+---
+
+## The money-and-access path
+
+Four properties hold this together. Each is enforced by something stronger than a code
+review, and each has a test that fails if it is removed.
+
+**Idempotency is a database constraint, not a check.** `webhook_events` has a unique index
+on `(gateway, gateway_event_id)`. An application-level "have I seen this?" loses the race
+under concurrent duplicate delivery — which mobile money actually produces — and the losing
+race grants a second subscription. Verified with ten concurrent identical deliveries against
+real Postgres: exactly one applies.
+
+**A duplicate is an event already applied, not an id already seen.** The test is
+`processed_at IS NOT NULL`. If it were "seen this id", a first delivery that failed halfway
+would poison the id forever and the gateway's retry — the mechanism designed to fix exactly
+that — would be discarded as a duplicate. The customer would have paid and got nothing,
+and the logs would say "duplicate, skipped".
+
+**A valid CinetPay signature is not a payment.** The notify is re-verified against
+CinetPay's check endpoint before anything is granted. If that endpoint is unreachable the
+handler returns 503 so CinetPay retries; it never records the event as processed, because
+consuming the id would make the retry look like a duplicate and lose a real payment.
+
+**Revocation has two classes.** Billing lapse, expiry and downgrade fail *open* for 72
+hours — a clinic does not lose patient records because a card expired on a Saturday.
+Security, fraud, chargeback and admin-for-cause fail *closed* immediately, bypass caching,
+and are never cleared by a later payment. Paying does not undo a fraud finding.
+
+### Running the database tests
+
+The tests that matter here are properties of Postgres, not of TypeScript, so they run
+against a real one. They skip when it is absent, so `npm test` works anywhere:
+
+```bash
+TEST_DATABASE_URL=postgres://user:pass@host/db npm test
+```
+
+### Applying the migration
+
+```bash
+psql "$DATABASE_URL" -f src/db/migrations/0001_init.sql
+```
+
+Idempotent — `CREATE TABLE IF NOT EXISTS` throughout, safe to re-run.
