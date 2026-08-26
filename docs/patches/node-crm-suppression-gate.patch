@@ -1,0 +1,723 @@
+From c380e64426d832d135846fe8b4cd24d9f299b125 Mon Sep 17 00:00:00 2001
+From: ARGILETTE <babalekpam@gmail.com>
+Date: Wed, 26 Aug 2026 15:52:08 +0000
+Subject: [PATCH] Suppression gate in front of both send paths
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Node CRM has two ways to send email — the authenticated tracked-send route
+and the workflow engine's send_email action, the latter unattended with
+execution_mode defaulting to auto. Neither checked anything before
+transmitting, no suppression list existed, tracked sends carried an open
+pixel and IP logging with no opt-out link, and contacts.opt_in was read by
+nothing.
+
+Adds email_suppressions keyed (tenant_id, channel, address) as a primary
+key so a repeat opt-out is a no-op, one assertSendable() called by both
+paths, and RFC 8058 one-click unsubscribe with HMAC tokens that need no
+storage and cannot be forged across tenants. The footer is injected inside
+embedTracking rather than at the call sites, so a future third send path
+inherits it.
+
+Also fixes the tracked-email feature, which threw at runtime: db.execute()
+on the node-postgres driver resolves to a pg Result, not an array, so every
+'const [x] = await db.execute(...)' in those two files raised
+'TypeError: is not iterable'. Adds a driver-agnostic rows() helper.
+
+Lawful basis is now required to import a scraped prospect, enforced by a
+CHECK constraint rather than app-level validation, and importing a record
+no longer marks it 'contacted' when nothing was sent.
+---
+ server/db.ts                      |  14 ++
+ server/routes/agents.ts           |  27 +++-
+ server/routes/email-tracking.ts   | 108 +++++++++++++--
+ server/routes/workflows.ts        |   8 +-
+ server/services/email-tracking.ts |  33 +++--
+ server/services/email.ts          |  26 +++-
+ server/services/suppression.ts    | 210 ++++++++++++++++++++++++++++++
+ 7 files changed, 400 insertions(+), 26 deletions(-)
+ create mode 100644 server/services/suppression.ts
+
+diff --git a/server/db.ts b/server/db.ts
+index 44cdba5..377d273 100644
+--- a/server/db.ts
++++ b/server/db.ts
+@@ -28,3 +28,17 @@ pool.on("connect", (client) => {
+ 
+ export const db = drizzle(pool, { schema: { ...schema, ...schemaExtended } });
+ export { pool };
++
++/**
++ * Rows from a raw SQL query, as an array.
++ *
++ * `db.execute()` on the node-postgres driver resolves to a pg `Result` object,
++ * NOT an array — `const [x] = await db.execute(...)` throws
++ * "TypeError: result is not iterable". The neon-http driver *does* return an
++ * array, so code written against one driver breaks silently on the other.
++ * This normalises both, and is the only safe way to read a raw query here.
++ */
++export async function rows<T = any>(query: Parameters<typeof db.execute>[0]): Promise<T[]> {
++  const res: any = await db.execute(query);
++  return Array.isArray(res) ? res : (res?.rows ?? []);
++}
+diff --git a/server/routes/agents.ts b/server/routes/agents.ts
+index bb9be8f..7824da6 100644
+--- a/server/routes/agents.ts
++++ b/server/routes/agents.ts
+@@ -6,6 +6,7 @@ import { leads } from "@shared/schema";
+ import { agentSessions, agentMessages, agentMemories, agentTasks, agentLeadGenResults } from "@shared/schema-extended";
+ import { eq, and, desc, sql } from "drizzle-orm";
+ import { runAgent, runLeadGenCampaign, saveMemory, AGENT_DEFINITIONS, type AgentType } from "../services/agents.js";
++import { isLawfulBasis, LAWFUL_BASES, ensureConsentSchema } from "../services/suppression.js";
+ 
+ const router = Router();
+ 
+@@ -122,6 +123,24 @@ router.get("/lead-gen/results", authenticate, async (req: AuthRequest, res) => {
+ // ── Import lead gen result as CRM lead ─────────────────────────
+ router.post("/lead-gen/:resultId/import", authenticate, async (req: AuthRequest, res) => {
+   try {
++    // A scraped prospect arrives with no lawful basis — "we found them online"
++    // is not one of the four. Requiring it at the moment the record enters the
++    // CRM is the only point where the person who can actually decide it is
++    // still in the room; every later send just inherits whatever was recorded.
++    const { lawfulBasis, lawfulBasisNote } = req.body || {};
++    if (!isLawfulBasis(lawfulBasis)) {
++      return res.status(400).json({
++        error: "lawfulBasis is required to import a prospect",
++        allowed: LAWFUL_BASES,
++      });
++    }
++    if (lawfulBasis === "legitimate_interest" && !String(lawfulBasisNote || "").trim()) {
++      return res.status(400).json({
++        error: "legitimate_interest requires lawfulBasisNote recording the balancing test",
++      });
++    }
++    await ensureConsentSchema();
++
+     const [result] = await db.select().from(agentLeadGenResults)
+       .where(and(eq(agentLeadGenResults.id, req.params.resultId), eq(agentLeadGenResults.tenantId, req.user!.tenantId)));
+ 
+@@ -139,10 +158,14 @@ router.post("/lead-gen/:resultId/import", authenticate, async (req: AuthRequest,
+       score: result.score,
+       status: "new",
+       createdBy: req.user!.id,
+-    }).returning();
++      lawfulBasis,
++      lawfulBasisNote: lawfulBasisNote || null,
++    } as any).returning();
+ 
+     await db.update(agentLeadGenResults)
+-      .set({ importedAsLeadId: lead.id, outreachStatus: "contacted" })
++      // NOT "contacted" — importing a record is not contacting a person, and
++      // recording it as such falsifies the history any later audit reads.
++      .set({ importedAsLeadId: lead.id, outreachStatus: "imported" })
+       .where(eq(agentLeadGenResults.id, result.id));
+ 
+     res.json({ lead, success: true });
+diff --git a/server/routes/email-tracking.ts b/server/routes/email-tracking.ts
+index e6d0eee..74e4c70 100644
+--- a/server/routes/email-tracking.ts
++++ b/server/routes/email-tracking.ts
+@@ -1,12 +1,17 @@
+ import { Router, type Request, type Response } from "express";
+ import { authenticate, type AuthRequest } from "../middleware/auth.js";
+-import { db } from "../db.js";
++import { db, rows } from "../db.js";
+ import { sql } from "drizzle-orm";
+ import {
+   TRACKING_PIXEL, embedTracking, logEmailEvent, detectForward,
+   getContactEmailTimeline, getEmailAnalytics,
+ } from "../services/email-tracking.js";
+ import { sendWithTenantSmtp } from "../services/email.js";
++import {
++  assertSendable, isSuppressed, suppress, normaliseAddress,
++  unsubscribeUrl, unsubscribeHeaders, verifyUnsubscribeToken,
++  SuppressedRecipientError,
++} from "../services/suppression.js";
+ 
+ const router = Router();
+ 
+@@ -26,7 +31,7 @@ router.get("/open/:trackingId.gif", async (req: Request, res: Response) => {
+     if (!isBotOrProxy) {
+       const isForward = await detectForward(trackingId, ip);
+       // Get tenantId from send record
+-      const [send] = await db.execute<{ tenant_id: string }>(
++      const [send] = await rows<{ tenant_id: string }>(
+         sql`SELECT tenant_id FROM email_sends WHERE tracking_id = ${trackingId}::uuid LIMIT 1`
+       );
+       if (send) {
+@@ -60,7 +65,7 @@ router.get("/click/:trackingId/:linkId", async (req: Request, res: Response) =>
+ 
+   let destination = "/";
+   try {
+-    const [send] = await db.execute<{ tenant_id: string; link_map: any }>(
++    const [send] = await rows<{ tenant_id: string; link_map: any }>(
+       sql`SELECT tenant_id, link_map FROM email_sends WHERE tracking_id = ${trackingId}::uuid LIMIT 1`
+     );
+     if (send) {
+@@ -81,6 +86,44 @@ router.get("/click/:trackingId/:linkId", async (req: Request, res: Response) =>
+   res.redirect(302, destination);
+ });
+ 
++// One-click unsubscribe (RFC 8058). Mail clients POST here from the native
++// unsubscribe button; people GET here from the footer link. Both must work, and
++// neither may require auth — the recipient has no account.
++async function applyUnsubscribe(token: string): Promise<boolean> {
++  const claim = verifyUnsubscribeToken(token);
++  if (!claim) return false;
++  await suppress({
++    tenantId: claim.tenantId,
++    address: claim.address,
++    reason: "unsubscribe",
++    channel: claim.channel,
++    source: "one-click",
++  });
++  return true;
++}
++
++const UNSUB_PAGE = (ok: boolean) => `<!doctype html><meta charset="utf-8">
++<meta name="viewport" content="width=device-width,initial-scale=1">
++<title>${ok ? "Unsubscribed" : "Link not valid"}</title>
++<body style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:32rem;margin:15vh auto;padding:0 1.5rem;color:#1e293b;line-height:1.6">
++<h1 style="font-size:1.35rem;margin:0 0 .5rem">${ok ? "You've been unsubscribed" : "This link is not valid"}</h1>
++<p style="color:#64748b;margin:0">${ok
++  ? "You will not receive further emails from us. No further action is needed."
++  : "It may have been altered in transit. If you are still receiving email you did not ask for, reply to any message and we will remove you."}</p>
++</body>`;
++
++router.post("/unsubscribe/:token", async (req: Request, res: Response) => {
++  // RFC 8058 requires a 2xx with no body for the one-click POST.
++  try { await applyUnsubscribe(req.params.token); } catch { /* fall through */ }
++  res.status(200).end();
++});
++
++router.get("/unsubscribe/:token", async (req: Request, res: Response) => {
++  let ok = false;
++  try { ok = await applyUnsubscribe(req.params.token); } catch { ok = false; }
++  res.status(ok ? 200 : 400).type("html").send(UNSUB_PAGE(ok));
++});
++
+ // ────────────────────────────────────────────────────────────────
+ // AUTHENTICATED API
+ // ────────────────────────────────────────────────────────────────
+@@ -94,9 +137,24 @@ router.post("/send", authenticate, async (req: AuthRequest, res) => {
+ 
+   const tenantId = req.user!.tenantId;
+ 
++  // Suppression is checked BEFORE the SMTP lookup and before the send record is
++  // written: a suppressed recipient must leave no trace of an attempted send.
++  try {
++    await assertSendable(tenantId, toEmail);
++  } catch (err) {
++    if (err instanceof SuppressedRecipientError) {
++      return res.status(409).json({
++        error: "Recipient has opted out",
++        code: err.code,
++        address: err.address,
++      });
++    }
++    throw err;
++  }
++
+   // Get tenant SMTP config
+   const { db: database } = await import("../db.js");
+-  const [tenant] = await database.execute<any>(
++  const [tenant] = await rows<any>(
+     sql`SELECT settings FROM tenants WHERE id = ${tenantId} LIMIT 1`
+   );
+   const smtp = (tenant?.settings as any)?.smtp;
+@@ -105,11 +163,12 @@ router.post("/send", authenticate, async (req: AuthRequest, res) => {
+   }
+ 
+   // Generate tracking ID and link map
+-  const [{ tracking_id }] = await database.execute<{ tracking_id: string }>(
++  const [{ tracking_id }] = await rows<{ tracking_id: string }>(
+     sql`SELECT gen_random_uuid()::text AS tracking_id`
+   );
+   const linkMap: Record<string, string> = {};
+-  const trackedHtml = embedTracking(html, tracking_id, linkMap);
++  const unsubUrl = unsubscribeUrl(tenantId, toEmail);
++  const trackedHtml = embedTracking(html, tracking_id, linkMap, unsubUrl);
+ 
+   // Save send record
+   await database.execute(sql`
+@@ -123,7 +182,7 @@ router.post("/send", authenticate, async (req: AuthRequest, res) => {
+   `);
+ 
+   // Send the email
+-  await sendWithTenantSmtp(smtp, toEmail, subject, trackedHtml);
++  await sendWithTenantSmtp(smtp, toEmail, subject, trackedHtml, unsubscribeHeaders(tenantId, toEmail));
+ 
+   res.json({ success: true, trackingId: tracking_id, message: `Email sent to ${toEmail} with tracking enabled` });
+ });
+@@ -142,7 +201,7 @@ router.get("/contact/:contactId", authenticate, async (req: AuthRequest, res) =>
+ 
+ // List all sent emails for tenant
+ router.get("/sends", authenticate, async (req: AuthRequest, res) => {
+-  const sends = await db.execute<any>(sql`
++  const sends = await rows<any>(sql`
+     SELECT es.*, c.first_name, c.last_name, c.name AS contact_name, c.company,
+       (SELECT COUNT(*) FROM email_events ee WHERE ee.email_send_id = es.id AND ee.event_type = 'open') AS open_count,
+       (SELECT COUNT(*) FROM email_events ee WHERE ee.email_send_id = es.id AND ee.event_type = 'click') AS click_count,
+@@ -156,4 +215,37 @@ router.get("/sends", authenticate, async (req: AuthRequest, res) => {
+   res.json(sends);
+ });
+ 
++// ── Suppression list management ─────────────────────────────────
++router.get("/suppressions", authenticate, async (req: AuthRequest, res) => {
++  const list = await rows<any>(sql`
++    SELECT address, reason, source, created_at
++    FROM email_suppressions
++    WHERE tenant_id = ${req.user!.tenantId} AND channel = 'email'
++    ORDER BY created_at DESC
++    LIMIT 500
++  `);
++  res.json(list);
++});
++
++router.post("/suppressions", authenticate, async (req: AuthRequest, res) => {
++  const { address, reason } = req.body;
++  if (!address) return res.status(400).json({ error: "address is required" });
++  await suppress({
++    tenantId: req.user!.tenantId,
++    address,
++    reason: reason === "bounce" || reason === "complaint" ? reason : "manual",
++    source: `user:${req.user!.id}`,
++  });
++  res.json({ success: true, address: normaliseAddress(address) });
++});
++
++// Deliberately no DELETE. Reinstating an address is a consent decision that
++// belongs to the person who opted out, not to whoever holds a CRM login.
++
++router.get("/suppressions/check", authenticate, async (req: AuthRequest, res) => {
++  const address = String(req.query.address || "");
++  if (!address) return res.status(400).json({ error: "address is required" });
++  res.json({ address: normaliseAddress(address), suppressed: await isSuppressed(req.user!.tenantId, address) });
++});
++
+ export default router;
+diff --git a/server/routes/workflows.ts b/server/routes/workflows.ts
+index f7af1b3..7a1ec17 100644
+--- a/server/routes/workflows.ts
++++ b/server/routes/workflows.ts
+@@ -5,6 +5,7 @@ import { tasks, leads, deals, contacts, accounts } from "@shared/schema";
+ import { eq, and, lte } from "drizzle-orm";
+ import { sql } from "drizzle-orm";
+ import { sendGenericEmail } from "../services/email.js";
++import { SuppressedRecipientError } from "../services/suppression.js";
+ 
+ const router = Router();
+ 
+@@ -146,9 +147,14 @@ async function executeAction(
+     const body    = interpolate(c.body || c.template || "", ctx);
+     if (to) {
+       try {
+-        await sendGenericEmail({ to, subject, body });
++        await sendGenericEmail({ tenantId, to, subject, body });
+         return { status: "success", detail: `Email sent to ${to}` };
+       } catch (err: any) {
++        // An opt-out is a correct outcome, not a failure. Reporting it as an
++        // error would invite someone to "fix" it by retrying.
++        if (err instanceof SuppressedRecipientError) {
++          return { status: "skipped", detail: `${to} has opted out — not contacted` };
++        }
+         return { status: "warning", detail: `Email to ${to} failed: ${err.message}` };
+       }
+     }
+diff --git a/server/services/email-tracking.ts b/server/services/email-tracking.ts
+index cad77c6..459fe4e 100644
+--- a/server/services/email-tracking.ts
++++ b/server/services/email-tracking.ts
+@@ -1,5 +1,6 @@
+-import { db } from "../db.js";
++import { db, rows } from "../db.js";
+ import { sql } from "drizzle-orm";
++import { unsubscribeFooterHtml } from "./suppression.js";
+ 
+ const TRACKING_BASE = process.env.APP_URL || "https://argilette.org";
+ 
+@@ -9,11 +10,17 @@ export const TRACKING_PIXEL = Buffer.from(
+   "base64"
+ );
+ 
+-// ── Wrap all links in email HTML with click-tracking redirects ───
++// ── Wrap links, append the opt-out footer, embed the open pixel ──
++//
++// The unsubscribe footer is injected HERE rather than at the call sites, so a
++// future third send path inherits it for free. `unsubUrl` is required, not
++// optional, so a caller that forgets it fails to compile rather than silently
++// mailing someone with no way out.
+ export function embedTracking(
+   html: string,
+   trackingId: string,
+-  linkMap: Record<string, string>
++  linkMap: Record<string, string>,
++  unsubUrl: string
+ ): string {
+   let linkIndex = 0;
+   const wrapped = html.replace(/href="(https?:\/\/[^"]+)"/gi, (_, url) => {
+@@ -22,8 +29,14 @@ export function embedTracking(
+     return `href="${TRACKING_BASE}/track/click/${trackingId}/${linkId}"`;
+   });
+ 
++  const footer = unsubscribeFooterHtml(unsubUrl);
++
+   const pixel = `<img src="${TRACKING_BASE}/track/open/${trackingId}.gif" width="1" height="1" style="display:none;border:0;width:1px;height:1px;" alt="" />`;
+-  return wrapped.replace(/<\/body>/i, `${pixel}</body>`) + (wrapped.includes("</body>") ? "" : pixel);
++
++  const tail = footer + pixel;
++  return wrapped.includes("</body>")
++    ? wrapped.replace(/<\/body>/i, `${tail}</body>`)
++    : wrapped + tail;
+ }
+ 
+ // ── Log an email event and update contact scores ─────────────────
+@@ -39,7 +52,7 @@ export async function logEmailEvent(opts: {
+   const { tenantId, trackingId, eventType, ip, userAgent, url, isForward } = opts;
+ 
+   // Find email send record
+-  const [send] = await db.execute<{
++  const [send] = await rows<{
+     id: string; contact_id: string | null; first_opener_ip: string | null; first_opened_at: string | null;
+   }>(sql`SELECT id, contact_id, first_opener_ip, first_opened_at FROM email_sends WHERE tracking_id = ${trackingId}::uuid LIMIT 1`);
+ 
+@@ -80,7 +93,7 @@ export async function detectForward(
+   trackingId: string,
+   currentIp: string
+ ): Promise<boolean> {
+-  const [send] = await db.execute<{ first_opener_ip: string | null }>(
++  const [send] = await rows<{ first_opener_ip: string | null }>(
+     sql`SELECT first_opener_ip FROM email_sends WHERE tracking_id = ${trackingId}::uuid LIMIT 1`
+   );
+   if (!send) return false;
+@@ -91,7 +104,7 @@ export async function detectForward(
+ 
+ // ── Get per-contact email timeline ───────────────────────────────
+ export async function getContactEmailTimeline(contactId: string, tenantId: string) {
+-  const sends = await db.execute<any>(sql`
++  const sends = await rows<any>(sql`
+     SELECT
+       es.id, es.tracking_id, es.subject, es.to_email, es.from_name, es.sent_at, es.status,
+       COALESCE(json_agg(ee ORDER BY ee.occurred_at DESC) FILTER (WHERE ee.id IS NOT NULL), '[]') AS events
+@@ -107,7 +120,7 @@ export async function getContactEmailTimeline(contactId: string, tenantId: strin
+ 
+ // ── Analytics overview for tenant ─────────────────────────────────
+ export async function getEmailAnalytics(tenantId: string) {
+-  const [totals] = await db.execute<any>(sql`
++  const [totals] = await rows<any>(sql`
+     SELECT
+       COUNT(DISTINCT es.id) AS total_sent,
+       COUNT(DISTINCT CASE WHEN es.status = 'opened' THEN es.id END) AS total_opened,
+@@ -126,7 +139,7 @@ export async function getEmailAnalytics(tenantId: string) {
+     WHERE es.tenant_id = ${tenantId}
+   `);
+ 
+-  const hotLeads = await db.execute<any>(sql`
++  const hotLeads = await rows<any>(sql`
+     SELECT c.id, c.first_name, c.last_name, c.name, c.email, c.company, c.job_title,
+            c.engagement_score, c.email_opens, c.email_clicks, c.email_forwards, c.last_engaged_at
+     FROM contacts c
+@@ -135,7 +148,7 @@ export async function getEmailAnalytics(tenantId: string) {
+     LIMIT 20
+   `);
+ 
+-  const recentEvents = await db.execute<any>(sql`
++  const recentEvents = await rows<any>(sql`
+     SELECT ee.event_type, ee.occurred_at, ee.is_forward, ee.ip,
+            es.subject, es.to_email,
+            c.first_name, c.last_name, c.name AS contact_name, c.company
+diff --git a/server/services/email.ts b/server/services/email.ts
+index 977eefd..be93120 100644
+--- a/server/services/email.ts
++++ b/server/services/email.ts
+@@ -1,4 +1,5 @@
+ import nodemailer from "nodemailer";
++import { assertSendable, unsubscribeHeaders, unsubscribeUrl, unsubscribeFooterHtml } from "./suppression.js";
+ 
+ const FROM = "ARGILETTE CRM <info@argilette.com>";
+ 
+@@ -31,6 +32,7 @@ export async function sendWithTenantSmtp(
+   to: string | string[],
+   subject: string,
+   html: string,
++  headers: Record<string, string> = {},
+ ): Promise<void> {
+   const t = nodemailer.createTransport({
+     host: cfg.host,
+@@ -39,7 +41,7 @@ export async function sendWithTenantSmtp(
+     auth: { user: cfg.user, pass: cfg.pass },
+   });
+   const from = `${cfg.senderName} <${cfg.senderEmail}>`;
+-  await t.sendMail({ from, to, subject, html });
++  await t.sendMail({ from, to, subject, html, headers });
+   t.close();
+ }
+ 
+@@ -58,13 +60,13 @@ const transporter = nodemailer.createTransport({
+   tls: { rejectUnauthorized: false },
+ });
+ 
+-async function send(to: string, subject: string, html: string) {
++async function send(to: string, subject: string, html: string, headers: Record<string, string> = {}) {
+   if (!process.env.SMTP_PASSWORD) {
+     console.warn("[EMAIL] SMTP_PASSWORD not set — email not sent to", to);
+     return;
+   }
+   try {
+-    await transporter.sendMail({ from: FROM, to, subject, html });
++    await transporter.sendMail({ from: FROM, to, subject, html, headers });
+     console.log(`[EMAIL] Sent "${subject}" → ${to}`);
+   } catch (err: any) {
+     console.error(`[EMAIL] Failed to send "${subject}" → ${to}:`, err.message);
+@@ -300,14 +302,28 @@ export async function sendContractEmail(opts: {
+ }
+ 
+ // ── Generic workflow / automation email ────────────────────────────────────
++/**
++ * Outreach email sent by the workflow engine, unattended.
++ *
++ * `tenantId` is required because suppression is per-tenant and there is no
++ * sensible default: a send with no tenant cannot be checked against anything.
++ * Throws SuppressedRecipientError if the recipient has opted out — the caller
++ * must treat that as "skipped", never as a failure to retry.
++ */
+ export async function sendGenericEmail(opts: {
++  tenantId: string;
+   to: string;
+   subject: string;
+   body: string;
+ }): Promise<void> {
+-  const { to, subject, body } = opts;
++  const { tenantId, to, subject, body } = opts;
++
++  await assertSendable(tenantId, to);
++
++  const unsubUrl = unsubscribeUrl(tenantId, to);
+   const html = base(`
+     <div style="font-size:15px;line-height:1.7;color:#1e293b">${body.replace(/\n/g, "<br/>")}</div>
++    ${unsubscribeFooterHtml(unsubUrl)}
+   `);
+-  await send(to, subject, html);
++  await send(to, subject, html, unsubscribeHeaders(tenantId, to));
+ }
+diff --git a/server/services/suppression.ts b/server/services/suppression.ts
+new file mode 100644
+index 0000000..ae36f04
+--- /dev/null
++++ b/server/services/suppression.ts
+@@ -0,0 +1,210 @@
++/**
++ * Suppression — the one place that decides whether an address may be emailed.
++ *
++ * Every send path in this codebase must go through `assertSendable` before it
++ * transmits. There are two of them today (the tracked-send route and the
++ * workflow engine's send_email action) and a gate in front of only one is worth
++ * nothing: the whole failure mode this prevents is a person who opted out on one
++ * path being contacted from the other.
++ *
++ * Unsubscribe tokens are HMACs, not rows. A stateless token works identically
++ * for both send paths, survives a restart, cannot be enumerated, and cannot be
++ * forged into someone else's address.
++ */
++import { db, rows } from "../db.js";
++import { sql } from "drizzle-orm";
++import { createHmac, timingSafeEqual } from "crypto";
++
++export type SuppressionChannel = "email";
++
++export class SuppressedRecipientError extends Error {
++  readonly code = "RECIPIENT_SUPPRESSED";
++  constructor(public readonly address: string) {
++    super(`${address} has opted out and cannot be contacted`);
++    this.name = "SuppressedRecipientError";
++  }
++}
++
++export class UnsubscribeSecretMissingError extends Error {
++  readonly code = "UNSUBSCRIBE_SECRET_MISSING";
++  constructor() {
++    super(
++      "UNSUBSCRIBE_SECRET (or JWT_SECRET) must be set before outreach email can be sent — " +
++      "without it the opt-out link cannot be signed."
++    );
++    this.name = "UnsubscribeSecretMissingError";
++  }
++}
++
++const APP_URL = process.env.APP_URL || "https://argilette.org";
++
++function secret(): string {
++  const s = process.env.UNSUBSCRIBE_SECRET || process.env.JWT_SECRET;
++  // Fail closed. Emitting an unsigned or randomly-keyed opt-out link is worse
++  // than not sending: the link breaks on the next restart and the recipient
++  // concludes the opt-out was ignored.
++  if (!s) throw new UnsubscribeSecretMissingError();
++  return s;
++}
++
++/** Addresses are compared case-insensitively — a suppression must not be escapable by capitalising. */
++export function normaliseAddress(address: string): string {
++  return address.trim().toLowerCase();
++}
++
++let tableReady: Promise<void> | null = null;
++function ensureTable(): Promise<void> {
++  if (!tableReady) {
++    tableReady = (async () => {
++      await db.execute(sql`
++        CREATE TABLE IF NOT EXISTS email_suppressions (
++          tenant_id varchar NOT NULL,
++          channel   text    NOT NULL DEFAULT 'email',
++          address   text    NOT NULL,
++          reason    text    NOT NULL,
++          source    text,
++          created_at timestamp NOT NULL DEFAULT now(),
++          PRIMARY KEY (tenant_id, channel, address)
++        )
++      `);
++      // Lawful basis lives on the record it justifies, enforced by a CHECK
++      // constraint rather than app-level validation, so a direct INSERT or a
++      // future second import path cannot bypass it.
++      await db.execute(sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS lawful_basis text`);
++      await db.execute(sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS lawful_basis_note text`);
++      await db.execute(sql`
++        DO $$ BEGIN
++          ALTER TABLE leads ADD CONSTRAINT leads_lawful_basis_check
++            CHECK (lawful_basis IS NULL OR lawful_basis IN
++              ('consent','contract','legitimate_interest','legal_obligation'));
++        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
++      `);
++    })().catch((e) => { tableReady = null; throw e; });
++  }
++  return tableReady;
++}
++
++/** Idempotent by primary key — recording an opt-out twice is a no-op, never a duplicate row. */
++export async function suppress(opts: {
++  tenantId: string;
++  address: string;
++  reason: "unsubscribe" | "bounce" | "complaint" | "manual";
++  channel?: SuppressionChannel;
++  source?: string;
++}): Promise<void> {
++  await ensureTable();
++  const address = normaliseAddress(opts.address);
++  await db.execute(sql`
++    INSERT INTO email_suppressions (tenant_id, channel, address, reason, source)
++    VALUES (${opts.tenantId}, ${opts.channel || "email"}, ${address}, ${opts.reason}, ${opts.source || null})
++    ON CONFLICT (tenant_id, channel, address) DO NOTHING
++  `);
++}
++
++export async function isSuppressed(
++  tenantId: string,
++  address: string,
++  channel: SuppressionChannel = "email"
++): Promise<boolean> {
++  await ensureTable();
++  const hits = await rows<{ address: string }>(sql`
++    SELECT address FROM email_suppressions
++    WHERE tenant_id = ${tenantId} AND channel = ${channel} AND address = ${normaliseAddress(address)}
++    LIMIT 1
++  `);
++  return hits.length > 0;
++}
++
++/**
++ * Call this immediately before transmitting. Throws rather than returning false
++ * so that a caller who forgets to check the result still cannot send.
++ */
++export async function assertSendable(
++  tenantId: string,
++  address: string,
++  channel: SuppressionChannel = "email"
++): Promise<void> {
++  if (await isSuppressed(tenantId, address, channel)) {
++    throw new SuppressedRecipientError(normaliseAddress(address));
++  }
++}
++
++// ── Stateless one-click unsubscribe tokens ─────────────────────────────────
++
++function b64url(b: Buffer): string {
++  return b.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
++}
++function unb64url(s: string): Buffer {
++  return Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"), "base64");
++}
++
++export function unsubscribeToken(tenantId: string, address: string, channel: SuppressionChannel = "email"): string {
++  const payload = `${tenantId}|${channel}|${normaliseAddress(address)}`;
++  const mac = createHmac("sha256", secret()).update(payload).digest();
++  return `${b64url(Buffer.from(payload, "utf8"))}.${b64url(mac)}`;
++}
++
++export function verifyUnsubscribeToken(
++  token: string
++): { tenantId: string; channel: SuppressionChannel; address: string } | null {
++  const dot = token.indexOf(".");
++  if (dot < 1) return null;
++  const payload = unb64url(token.slice(0, dot)).toString("utf8");
++  const given = unb64url(token.slice(dot + 1));
++
++  let expected: Buffer;
++  try { expected = createHmac("sha256", secret()).update(payload).digest(); }
++  catch { return null; }
++  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
++
++  const parts = payload.split("|");
++  if (parts.length !== 3) return null;
++  const [tenantId, channel, address] = parts as [string, string, string];
++  if (!tenantId || !address || channel !== "email") return null;
++  return { tenantId, channel, address };
++}
++
++export function unsubscribeUrl(tenantId: string, address: string): string {
++  return `${APP_URL}/track/unsubscribe/${unsubscribeToken(tenantId, address)}`;
++}
++
++/**
++ * RFC 8058 one-click headers. Mail clients surface a native "unsubscribe"
++ * button from these, which is what actually keeps complaint rates down —
++ * a footer link alone does not.
++ */
++export function unsubscribeHeaders(tenantId: string, address: string): Record<string, string> {
++  return {
++    "List-Unsubscribe": `<${unsubscribeUrl(tenantId, address)}>`,
++    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
++  };
++}
++
++/**
++ * The opt-out footer. Defined once, here, so the tracked-send path and the
++ * workflow path cannot drift into showing recipients different things.
++ * Deliberately NOT click-tracked: the one action a recipient is unconditionally
++ * entitled to take must not depend on our redirect service being up.
++ */
++export function unsubscribeFooterHtml(unsubUrl: string): string {
++  return (
++    `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;` +
++    `font-size:12px;line-height:1.6;color:#64748b">` +
++    `Don't want these emails? <a href="${unsubUrl}" style="color:#64748b">Unsubscribe</a>.` +
++    `</div>`
++  );
++}
++
++// ── Lawful basis ───────────────────────────────────────────────────────────
++
++export const LAWFUL_BASES = ["consent", "contract", "legitimate_interest", "legal_obligation"] as const;
++export type LawfulBasis = (typeof LAWFUL_BASES)[number];
++
++export function isLawfulBasis(v: unknown): v is LawfulBasis {
++  return typeof v === "string" && (LAWFUL_BASES as readonly string[]).includes(v);
++}
++
++/** Run the consent migrations without performing a suppression lookup. */
++export async function ensureConsentSchema(): Promise<void> {
++  await ensureTable();
++}
+-- 
+2.43.0
+
