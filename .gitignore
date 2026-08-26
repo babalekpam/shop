@@ -13,3 +13,9 @@ coverage/
 
 *.log
 .DS_Store
+
+# Prospect lists and any other personal data. Never committed: version control
+# replicates to every clone and fork, and unlike a secret this cannot be rotated —
+# and the people in it did not choose to be.
+data/
+!data/.gitkeep
