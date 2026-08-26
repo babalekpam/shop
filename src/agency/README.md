@@ -12,6 +12,7 @@ budget/      Token and ad-spend ceilings
 content/     Taint tracking, credential register, PHI tripwire
 agents/      The seven agents and the dispatcher
 channels/    Transports behind one interface, with a recording double
+crm/         Node CRM port, HTTP adapter, configurable mapping, sync
 ```
 
 ## What is real
@@ -50,6 +51,32 @@ one line in `domain/autonomy.ts` fails two tests, by design.
 accepted without a human verifying the client is authorised to have the target tested
 sells ARGILETTE into unauthorised access to a third party's systems. The draft Terms
 already require that warranty; the gate is what makes it true.
+
+## Connecting Node CRM
+
+```bash
+NODE_CRM_URL=https://crm.example NODE_CRM_TOKEN=... npm run agency:crm-check
+```
+
+Skips cleanly with no credentials, probes a live instance with them.
+
+Node CRM's exact API surface is an open question in the spec (§13.3), so the adapter is
+driven by `crm/mapping.ts` rather than hard-coded. If Node CRM calls the field
+`company_name`, that is one line of `NODE_CRM_MAPPING` rather than a client rewrite. The
+defaults are a conventional REST shape and **they are assumptions** — the check is how you
+find out which are wrong.
+
+Two rules the sync exists to hold:
+
+**Suppression is never delegated and never mirrored.** Sends read it from the local store,
+always. The CRM can contribute suppressions; they flow one way, and only ever adding.
+There is no path that removes a local suppression because the CRM stopped listing it — a
+deleted row or a botched migration must not return someone to the pool after they
+objected. A CRM outage therefore cannot enable a send: stale-but-present is safe.
+
+**Only enumerated fields cross the boundary.** A CRM is where people put free text and
+NaviMED prospects are clinics, so a `notes` column on the other side has nowhere to land
+here. Asserted by a test that feeds the client a record containing clinical text.
 
 ## Next
 

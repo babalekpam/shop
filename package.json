@@ -2,7 +2,7 @@
   "name": "argilette-shop",
   "version": "0.1.0",
   "private": true,
-  "description": "ARGILETTE.shop — storefront and entitlement backbone",
+  "description": "ARGILETTE.shop \u2014 storefront and entitlement backbone",
   "type": "module",
   "scripts": {
     "dev": "next dev",
@@ -11,10 +11,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "npm run typecheck && npm run test && npm run build"
+    "verify": "npm run typecheck && npm run test && npm run build",
+    "agency:crm-check": "vitest run tests/agency/crm-connection.test.ts"
   },
   "comments": {
-    "pinning": "Exact versions, no ranges, lockfile committed — security spec §11. A checkout path is not the place for a floating dependency."
+    "pinning": "Exact versions, no ranges, lockfile committed \u2014 security spec \u00a711. A checkout path is not the place for a floating dependency."
   },
   "dependencies": {
     "motion": "13.1.0",
