@@ -162,9 +162,32 @@ NaviMED and Node CRM demand actually is.
 - **No automated connection requests, no automated DMs, no scraping.** These violate LinkedIn's
   terms regardless of tooling, enforcement is aggressive, and the account at risk is the one the
   catalog says already produces inbound. Losing it costs more than the automation saves.
-- Practical constraint to plan around: programmatic posting needs LinkedIn API access that is granted
-  on application, not by default. Until it is granted, the Publisher drafts and schedules and a human
-  posts. Budget for that being the state of things for a while.
+**Access is an application, and a LinkedIn Page alone does not grant it.** The Page is the object
+you post *to*; the gate is the Community Management API, and it has five prerequisites:
+
+| Requirement | ARGILETTE status |
+|---|---|
+| A registered legal entity — individuals are refused | ✅ ARGILETTE LLC |
+| A LinkedIn Page | ✅ held |
+| A developer app, with business email, legal name, registered address and website | ⬜ to create |
+| A **Page super admin verifying the app** — no verification, no access | ⬜ to do |
+| An access request stating the use case, reviewed by LinkedIn | ⬜ to submit |
+
+Two tiers follow. **Development Tier** is granted first and caps at roughly 500 requests per app and
+100 per member. That is almost certainly sufficient for our volume — a handful of posts a day plus
+comment reads is nowhere near the ceiling — so **Standard Tier is unlikely to be on the critical
+path.** The blocker is the initial approval, not the upgrade.
+
+LinkedIn publishes no approval timeline and third-party reports range from days to months. Plan for
+the Publisher drafting while a human posts, and treat API posting as an improvement that lands when
+it lands rather than a dependency.
+
+**Where the value actually is.** The catalog says inbound already arrives through the founder's
+personal profile, and that the sale is credential-led. Personal posts also out-reach Page posts
+substantially on this platform. The permission set includes `w_member_social`, so posting as a member
+— with that member authorising their own app — is legitimate, unlike automated connections or DMs.
+But the credential is the product here: personal posts should stay review-before-send even where
+automation is permitted. Automate the Page freely; assist rather than replace the personal voice.
 
 ### 4.4 Paid ads — phase 2, machinery built now
 
